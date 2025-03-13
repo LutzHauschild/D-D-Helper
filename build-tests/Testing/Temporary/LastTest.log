@@ -1,0 +1,57 @@
+Start testing: Mar 13 23:54 CET
+----------------------------------------------------------
+1/2 Testing: tst_character
+1/2 Test: tst_character
+Command: "/Users/modemuser/D&D-Helper/build-tests/tests/tst_character"
+Directory: /Users/modemuser/D&D-Helper/build-tests/tests
+"tst_character" start time: Mar 13 23:54 CET
+Output:
+----------------------------------------------------------
+********* Start testing of TestCharacter *********
+Config: Using QtTest library 6.8.2, Qt 6.8.2 (arm64-little_endian-lp64 shared (dynamic) release build; by Apple LLVM 16.0.0 (clang-1600.0.26.6)), macos 15.3
+PASS   : TestCharacter::initTestCase()
+PASS   : TestCharacter::testDefaultConstructor()
+PASS   : TestCharacter::testParameterizedConstructor()
+PASS   : TestCharacter::testNameGetterSetter()
+PASS   : TestCharacter::testInitiativeModifierGetterSetter()
+PASS   : TestCharacter::testRollInitiative()
+PASS   : TestCharacter::testGetTotalInitiative()
+PASS   : TestCharacter::cleanupTestCase()
+Totals: 8 passed, 0 failed, 0 skipped, 0 blacklisted, 1ms
+********* Finished testing of TestCharacter *********
+<end of output>
+Test time =   0.30 sec
+----------------------------------------------------------
+Test Passed.
+"tst_character" end time: Mar 13 23:54 CET
+"tst_character" time elapsed: 00:00:00
+----------------------------------------------------------
+
+2/2 Testing: tst_initiativetracker
+2/2 Test: tst_initiativetracker
+Command: "/Users/modemuser/D&D-Helper/build-tests/tests/tst_initiativetracker"
+Directory: /Users/modemuser/D&D-Helper/build-tests/tests
+"tst_initiativetracker" start time: Mar 13 23:54 CET
+Output:
+----------------------------------------------------------
+********* Start testing of TestInitiativeTracker *********
+Config: Using QtTest library 6.8.2, Qt 6.8.2 (arm64-little_endian-lp64 shared (dynamic) release build; by Apple LLVM 16.0.0 (clang-1600.0.26.6)), macos 15.3
+PASS   : TestInitiativeTracker::initTestCase()
+PASS   : TestInitiativeTracker::testAddCharacter()
+PASS   : TestInitiativeTracker::testRemoveCharacter()
+PASS   : TestInitiativeTracker::testClearCharacters()
+PASS   : TestInitiativeTracker::testRollAllInitiatives()
+PASS   : TestInitiativeTracker::testGetSortedInitiativeOrder()
+PASS   : TestInitiativeTracker::testSaveAndLoadFromFile()
+PASS   : TestInitiativeTracker::cleanupTestCase()
+Totals: 8 passed, 0 failed, 0 skipped, 0 blacklisted, 1ms
+********* Finished testing of TestInitiativeTracker *********
+<end of output>
+Test time =   0.24 sec
+----------------------------------------------------------
+Test Passed.
+"tst_initiativetracker" end time: Mar 13 23:54 CET
+"tst_initiativetracker" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Mar 13 23:54 CET

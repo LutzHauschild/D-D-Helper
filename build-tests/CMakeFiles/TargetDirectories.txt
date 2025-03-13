@@ -1,0 +1,15 @@
+/Users/modemuser/D&D-Helper/build-tests/CMakeFiles/DnDInitiativeTracker.dir
+/Users/modemuser/D&D-Helper/build-tests/CMakeFiles/test.dir
+/Users/modemuser/D&D-Helper/build-tests/CMakeFiles/edit_cache.dir
+/Users/modemuser/D&D-Helper/build-tests/CMakeFiles/rebuild_cache.dir
+/Users/modemuser/D&D-Helper/build-tests/CMakeFiles/DnDInitiativeTracker_autogen_timestamp_deps.dir
+/Users/modemuser/D&D-Helper/build-tests/CMakeFiles/DnDInitiativeTracker_autogen.dir
+/Users/modemuser/D&D-Helper/build-tests/tests/CMakeFiles/tst_character.dir
+/Users/modemuser/D&D-Helper/build-tests/tests/CMakeFiles/tst_initiativetracker.dir
+/Users/modemuser/D&D-Helper/build-tests/tests/CMakeFiles/test.dir
+/Users/modemuser/D&D-Helper/build-tests/tests/CMakeFiles/edit_cache.dir
+/Users/modemuser/D&D-Helper/build-tests/tests/CMakeFiles/rebuild_cache.dir
+/Users/modemuser/D&D-Helper/build-tests/tests/CMakeFiles/tst_character_autogen_timestamp_deps.dir
+/Users/modemuser/D&D-Helper/build-tests/tests/CMakeFiles/tst_character_autogen.dir
+/Users/modemuser/D&D-Helper/build-tests/tests/CMakeFiles/tst_initiativetracker_autogen_timestamp_deps.dir
+/Users/modemuser/D&D-Helper/build-tests/tests/CMakeFiles/tst_initiativetracker_autogen.dir

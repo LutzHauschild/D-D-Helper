@@ -1,0 +1,70 @@
+name: C++ CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  build-and-test:
+    name: ${{ matrix.os }}-build-and-test
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        include:
+          - os: ubuntu-latest
+            qt-version: '6.5.0'
+          - os: macos-latest
+            qt-version: '6.5.0'
+          - os: windows-latest
+            qt-version: '6.5.0'
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Install Dependencies (Ubuntu)
+      if: runner.os == 'Linux'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libgl1-mesa-dev libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-render-util0 libxcb-xinerama0 libxcb-xkb1 xvfb
+
+    - name: Install Qt
+      uses: jurplel/install-qt-action@v3
+      with:
+        version: ${{ matrix.qt-version }}
+        modules: 'qtwidgets qttest'
+
+    - name: Create Build Environment
+      run: cmake -E make_directory ${{github.workspace}}/build
+
+    - name: Configure CMake (Unix)
+      if: runner.os != 'Windows'
+      shell: bash
+      working-directory: ${{github.workspace}}/build
+      run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=Release
+
+    - name: Configure CMake (Windows)
+      if: runner.os == 'Windows'
+      shell: bash
+      working-directory: ${{github.workspace}}/build
+      run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=Release
+
+    - name: Build
+      working-directory: ${{github.workspace}}/build
+      shell: bash
+      run: cmake --build . --config Release
+
+    - name: Test (Linux)
+      if: runner.os == 'Linux'
+      working-directory: ${{github.workspace}}/build
+      shell: bash
+      run: |
+        xvfb-run -a ctest -C Release --output-on-failure
+
+    - name: Test (macOS/Windows)
+      if: runner.os != 'Linux'
+      working-directory: ${{github.workspace}}/build
+      shell: bash
+      run: ctest -C Release --output-on-failure 
