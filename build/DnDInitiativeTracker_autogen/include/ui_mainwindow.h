@@ -91,8 +91,8 @@ public:
         verticalLayout->addWidget(groupBox);
 
         characterTableWidget = new QTableWidget(centralwidget);
-        if (characterTableWidget->columnCount() < 4)
-            characterTableWidget->setColumnCount(4);
+        if (characterTableWidget->columnCount() < 5)
+            characterTableWidget->setColumnCount(5);
         QTableWidgetItem *__qtablewidgetitem = new QTableWidgetItem();
         characterTableWidget->setHorizontalHeaderItem(0, __qtablewidgetitem);
         QTableWidgetItem *__qtablewidgetitem1 = new QTableWidgetItem();
@@ -101,6 +101,8 @@ public:
         characterTableWidget->setHorizontalHeaderItem(2, __qtablewidgetitem2);
         QTableWidgetItem *__qtablewidgetitem3 = new QTableWidgetItem();
         characterTableWidget->setHorizontalHeaderItem(3, __qtablewidgetitem3);
+        QTableWidgetItem *__qtablewidgetitem4 = new QTableWidgetItem();
+        characterTableWidget->setHorizontalHeaderItem(4, __qtablewidgetitem4);
         characterTableWidget->setObjectName("characterTableWidget");
 
         verticalLayout->addWidget(characterTableWidget);
@@ -154,6 +156,8 @@ public:
         ___qtablewidgetitem2->setText(QCoreApplication::translate("MainWindow", "Wurf", nullptr));
         QTableWidgetItem *___qtablewidgetitem3 = characterTableWidget->horizontalHeaderItem(3);
         ___qtablewidgetitem3->setText(QCoreApplication::translate("MainWindow", "Gesamt", nullptr));
+        QTableWidgetItem *___qtablewidgetitem4 = characterTableWidget->horizontalHeaderItem(4);
+        ___qtablewidgetitem4->setText(QCoreApplication::translate("MainWindow", "TaleSpire", nullptr));
         rollButton->setText(QCoreApplication::translate("MainWindow", "Initiative w\303\274rfeln", nullptr));
         clearButton->setText(QCoreApplication::translate("MainWindow", "Liste leeren", nullptr));
         removeButton->setText(QCoreApplication::translate("MainWindow", "Ausgew\303\244hlten entfernen", nullptr));

@@ -4,6 +4,9 @@
 #include <QMainWindow>
 #include <QTableWidgetItem>
 #include <QCloseEvent>
+#include <QDesktopServices>
+#include <QUrl>
+#include <QPushButton>
 #include "initiativetracker.h"
 
 QT_BEGIN_NAMESPACE
@@ -85,6 +88,13 @@ private slots:
      * Wird aufgerufen, wenn sich die Charakterliste ändert oder die Initiative gewürfelt wurde.
      */
     void updateCharacterTable();
+    
+    /**
+     * @brief Öffnet die TaleSpire-URL mit dem angegebenen Modifikator.
+     * 
+     * @param modifier Der Initiative-Modifikator, der in die URL eingefügt wird
+     */
+    void openTaleSpireUrl(int modifier);
 
 private:
     Ui::MainWindow *ui;                   ///< Zeiger auf die UI-Elemente

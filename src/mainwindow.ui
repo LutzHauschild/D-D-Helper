@@ -80,6 +80,11 @@
         <string>Gesamt</string>
        </property>
       </column>
+      <column>
+       <property name="text">
+        <string>TaleSpire</string>
+       </property>
+      </column>
      </widget>
     </item>
     <item>

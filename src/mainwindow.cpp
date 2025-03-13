@@ -2,6 +2,8 @@
 #include "ui_mainwindow.h"
 #include <QMessageBox>
 #include <QDebug>
+#include <QDesktopServices>
+#include <QPushButton>
 
 /**
  * @brief Konstruktor für das Hauptfenster
@@ -97,6 +99,28 @@ void MainWindow::saveCharacters()
         qDebug() << "Charakterdaten erfolgreich gespeichert.";
     } else {
         qDebug() << "Fehler beim Speichern der Charakterdaten.";
+    }
+}
+
+/**
+ * @brief Öffnet die TaleSpire-URL mit dem angegebenen Modifikator
+ * 
+ * Erstellt eine URL im Format "talespire://dice/attack:d20+<modifikator>"
+ * und öffnet sie im Standardbrowser oder der TaleSpire-Anwendung.
+ * 
+ * @param modifier Der Initiative-Modifikator, der in die URL eingefügt wird
+ */
+void MainWindow::openTaleSpireUrl(int modifier)
+{
+    // Erstellt die TaleSpire-URL mit dem angegebenen Modifikator
+    QString urlString = QString("talespire://dice/attack:d20+%1").arg(modifier);
+    QUrl url(urlString);
+    
+    // Öffnet die URL im Standardbrowser oder der TaleSpire-Anwendung
+    bool success = QDesktopServices::openUrl(url);
+    
+    if (!success) {
+        QMessageBox::warning(this, tr("Fehler"), tr("Die TaleSpire-URL konnte nicht geöffnet werden. Stellen Sie sicher, dass TaleSpire installiert ist."));
     }
 }
 
@@ -213,6 +237,20 @@ void MainWindow::updateCharacterTable()
         ui->characterTableWidget->setItem(row, 1, new QTableWidgetItem(QString::number(character.getInitiativeModifier())));
         ui->characterTableWidget->setItem(row, 2, new QTableWidgetItem(QString::number(character.getInitiativeRoll())));
         ui->characterTableWidget->setItem(row, 3, new QTableWidgetItem(QString::number(character.getTotalInitiative())));
+        
+        // TaleSpire-Knopf erstellen und konfigurieren
+        QPushButton *taleSpireButton = new QPushButton(tr("Würfeln in Talespire"));
+        
+        // Modifikator für den Knopf speichern
+        int modifier = character.getInitiativeModifier();
+        
+        // Verbindung zum Slot herstellen (mit Lambda-Funktion, um den Modifikator zu übergeben)
+        connect(taleSpireButton, &QPushButton::clicked, this, [this, modifier]() {
+            this->openTaleSpireUrl(modifier);
+        });
+        
+        // Knopf in die Tabelle einfügen
+        ui->characterTableWidget->setCellWidget(row, 4, taleSpireButton);
     }
     
     // Spaltenbreiten an den Inhalt anpassen
