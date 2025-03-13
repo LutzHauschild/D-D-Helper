@@ -1142,14 +1142,99 @@ CMakeFiles/DnDInitiativeTracker.dir/src/main.cpp.o: \
   /opt/homebrew/include/QtWidgets/qstyle.h \
   /opt/homebrew/include/QtWidgets/qtabbar.h \
   /opt/homebrew/include/QtWidgets/qrubberband.h \
+  /opt/homebrew/lib/QtGui.framework/Headers/QCloseEvent \
+  /opt/homebrew/lib/QtGui.framework/Headers/qevent.h \
+  /opt/homebrew/include/QtCore/qcoreevent.h \
+  /opt/homebrew/include/QtCore/qiodevice.h \
+  /opt/homebrew/include/QtCore/qurl.h \
+  /opt/homebrew/include/QtGui/qeventpoint.h \
+  /opt/homebrew/include/QtGui/qvector2d.h \
+  /opt/homebrew/include/QtGui/qvectornd.h \
+  /opt/homebrew/include/QtGui/qpointingdevice.h \
+  /opt/homebrew/include/QtGui/qinputdevice.h \
+  /opt/homebrew/include/QtGui/qscreen.h \
+  /opt/homebrew/include/QtCore/QList \
+  /opt/homebrew/include/QtCore/QObject \
+  /opt/homebrew/include/QtCore/QRect /opt/homebrew/include/QtCore/QSize \
+  /opt/homebrew/include/QtCore/QSizeF \
+  /opt/homebrew/include/QtGui/QTransform \
+  /opt/homebrew/include/QtCore/qnativeinterface.h \
+  /opt/homebrew/include/QtGui/qscreen_platform.h \
+  /opt/homebrew/include/QtGui/qguiapplication.h \
+  /opt/homebrew/include/QtCore/qcoreapplication.h \
+  /opt/homebrew/include/QtCore/qdeadlinetimer.h \
+  /opt/homebrew/include/QtCore/qelapsedtimer.h \
+  /opt/homebrew/include/QtCore/qeventloop.h \
+  /opt/homebrew/include/QtCore/qcoreapplication_platform.h \
+  /opt/homebrew/include/QtGui/qinputmethod.h \
+  /opt/homebrew/include/QtGui/qguiapplication_platform.h \
   /Users/modemuser/D&D-Helper/src/initiativetracker.h \
   /opt/homebrew/lib/QtCore.framework/Headers/QVector \
   /opt/homebrew/lib/QtCore.framework/Headers/qvector.h \
   /opt/homebrew/lib/QtCore.framework/Headers/QObject \
-  /opt/homebrew/lib/QtCore.framework/Headers/qobject.h \
-  /Users/modemuser/D&D-Helper/src/character.h \
   /opt/homebrew/lib/QtCore.framework/Headers/QString \
   /opt/homebrew/lib/QtCore.framework/Headers/qstring.h \
+  /opt/homebrew/lib/QtCore.framework/Headers/QFile \
+  /opt/homebrew/lib/QtCore.framework/Headers/qfile.h \
+  /opt/homebrew/include/QtCore/qfiledevice.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX15.2.sdk/usr/include/c++/v1/filesystem \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX15.2.sdk/usr/include/c++/v1/__filesystem/copy_options.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX15.2.sdk/usr/include/c++/v1/__filesystem/directory_entry.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX15.2.sdk/usr/include/c++/v1/__filesystem/file_status.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX15.2.sdk/usr/include/c++/v1/__filesystem/file_type.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX15.2.sdk/usr/include/c++/v1/__filesystem/perms.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX15.2.sdk/usr/include/c++/v1/__filesystem/file_time_type.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX15.2.sdk/usr/include/c++/v1/__filesystem/filesystem_error.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX15.2.sdk/usr/include/c++/v1/__filesystem/path.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX15.2.sdk/usr/include/c++/v1/iomanip \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX15.2.sdk/usr/include/c++/v1/istream \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX15.2.sdk/usr/include/c++/v1/ostream \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX15.2.sdk/usr/include/c++/v1/bitset \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX15.2.sdk/usr/include/c++/v1/format \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX15.2.sdk/usr/include/c++/v1/__format/container_adaptor.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX15.2.sdk/usr/include/c++/v1/__format/range_default_formatter.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX15.2.sdk/usr/include/c++/v1/__format/range_formatter.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX15.2.sdk/usr/include/c++/v1/__format/format_context.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX15.2.sdk/usr/include/c++/v1/__format/format_arg_store.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX15.2.sdk/usr/include/c++/v1/__format/format_args.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX15.2.sdk/usr/include/c++/v1/__ranges/ref_view.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX15.2.sdk/usr/include/c++/v1/queue \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX15.2.sdk/usr/include/c++/v1/deque \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX15.2.sdk/usr/include/c++/v1/stack \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX15.2.sdk/usr/include/c++/v1/__format/format_functions.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX15.2.sdk/usr/include/c++/v1/__format/formatter_char.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX15.2.sdk/usr/include/c++/v1/__format/write_escaped.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX15.2.sdk/usr/include/c++/v1/__format/escaped_output_table.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX15.2.sdk/usr/include/c++/v1/__format/formatter_floating_point.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX15.2.sdk/usr/include/c++/v1/__charconv/chars_format.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX15.2.sdk/usr/include/c++/v1/__charconv/to_chars_floating_point.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX15.2.sdk/usr/include/c++/v1/__format/formatter_integer.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX15.2.sdk/usr/include/c++/v1/__format/formatter_pointer.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX15.2.sdk/usr/include/c++/v1/__format/formatter_string.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX15.2.sdk/usr/include/c++/v1/__format/formatter_tuple.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX15.2.sdk/usr/include/c++/v1/print \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX15.2.sdk/usr/include/unistd.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX15.2.sdk/usr/include/c++/v1/__filesystem/operations.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX15.2.sdk/usr/include/c++/v1/__filesystem/perm_options.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX15.2.sdk/usr/include/c++/v1/__filesystem/space_info.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX15.2.sdk/usr/include/c++/v1/__filesystem/directory_iterator.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX15.2.sdk/usr/include/c++/v1/__filesystem/directory_options.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX15.2.sdk/usr/include/c++/v1/__filesystem/path_iterator.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX15.2.sdk/usr/include/c++/v1/__filesystem/recursive_directory_iterator.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX15.2.sdk/usr/include/c++/v1/__filesystem/u8path.h \
+  /opt/homebrew/lib/QtCore.framework/Headers/QJsonDocument \
+  /opt/homebrew/lib/QtCore.framework/Headers/qjsondocument.h \
+  /opt/homebrew/include/QtCore/qjsonvalue.h \
+  /opt/homebrew/include/QtCore/qcborvalue.h \
+  /opt/homebrew/include/QtCore/qcborcommon.h \
+  /opt/homebrew/include/QtCore/qdatetime.h \
+  /opt/homebrew/include/QtCore/qcalendar.h \
+  /opt/homebrew/include/QtCore/quuid.h \
+  /opt/homebrew/lib/QtCore.framework/Headers/QJsonArray \
+  /opt/homebrew/lib/QtCore.framework/Headers/qjsonarray.h \
+  /opt/homebrew/lib/QtCore.framework/Headers/QJsonObject \
+  /opt/homebrew/lib/QtCore.framework/Headers/qjsonobject.h \
+  /Users/modemuser/D&D-Helper/src/character.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX15.2.sdk/usr/include/c++/v1/random \
   /Library/Developer/CommandLineTools/SDKs/MacOSX15.2.sdk/usr/include/c++/v1/__random/bernoulli_distribution.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX15.2.sdk/usr/include/c++/v1/__random/uniform_real_distribution.h \
@@ -1186,16 +1271,6 @@ CMakeFiles/DnDInitiativeTracker.dir/src/main.cpp.o: \
   /Library/Developer/CommandLineTools/SDKs/MacOSX15.2.sdk/usr/include/c++/v1/__random/weibull_distribution.h \
   /opt/homebrew/lib/QtWidgets.framework/Headers/QApplication \
   /opt/homebrew/lib/QtWidgets.framework/Headers/qapplication.h \
-  /opt/homebrew/include/QtCore/qcoreapplication.h \
-  /opt/homebrew/include/QtCore/qcoreevent.h \
-  /opt/homebrew/include/QtCore/qdeadlinetimer.h \
-  /opt/homebrew/include/QtCore/qelapsedtimer.h \
-  /opt/homebrew/include/QtCore/qeventloop.h \
-  /opt/homebrew/include/QtCore/qnativeinterface.h \
-  /opt/homebrew/include/QtCore/qcoreapplication_platform.h \
-  /opt/homebrew/include/QtGui/qguiapplication.h \
-  /opt/homebrew/include/QtGui/qinputmethod.h \
-  /opt/homebrew/include/QtGui/qguiapplication_platform.h \
   /opt/homebrew/lib/QtCore.framework/Headers/QLocale \
   /opt/homebrew/lib/QtCore.framework/Headers/qlocale.h \
   /opt/homebrew/lib/QtCore.framework/Headers/QTranslator \
