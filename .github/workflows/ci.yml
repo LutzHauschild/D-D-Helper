@@ -31,12 +31,26 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install -y libgl1-mesa-dev libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-render-util0 libxcb-xinerama0 libxcb-xkb1 xvfb
+        sudo apt-get install -y libicu-dev libicu70 libicu-dev
 
     - name: Install Qt
       uses: jurplel/install-qt-action@v3
       with:
         version: ${{ matrix.qt-version }}
         archives: 'qtbase qttools'
+
+    - name: Debug Qt Installation (Linux)
+      if: runner.os == 'Linux'
+      shell: bash
+      run: |
+        echo "Qt installation directory:"
+        ls -la "$Qt6_DIR"
+        echo "Qt lib directory:"
+        ls -la "$Qt6_DIR/lib"
+        echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
+        echo "Setting LD_LIBRARY_PATH to include Qt libraries"
+        export LD_LIBRARY_PATH="$Qt6_DIR/lib:$LD_LIBRARY_PATH"
+        echo "New LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
 
     - name: Create and Clean Build Directory
       shell: bash
@@ -52,6 +66,7 @@ jobs:
         echo "Current directory: $(pwd)"
         echo "Workspace directory: $GITHUB_WORKSPACE"
         ls -la "$GITHUB_WORKSPACE"
+        export LD_LIBRARY_PATH="$Qt6_DIR/lib:$LD_LIBRARY_PATH"
         cmake "$GITHUB_WORKSPACE" -DCMAKE_BUILD_TYPE=Release
 
     - name: Configure CMake (Windows)
@@ -68,7 +83,9 @@ jobs:
       if: runner.os != 'Windows'
       working-directory: ${{github.workspace}}/build
       shell: bash
-      run: cmake --build . --config Release
+      run: |
+        export LD_LIBRARY_PATH="$Qt6_DIR/lib:$LD_LIBRARY_PATH"
+        cmake --build . --config Release
 
     - name: Build (Windows)
       if: runner.os == 'Windows'
@@ -81,6 +98,7 @@ jobs:
       working-directory: ${{github.workspace}}/build
       shell: bash
       run: |
+        export LD_LIBRARY_PATH="$Qt6_DIR/lib:$LD_LIBRARY_PATH"
         xvfb-run -a ctest -C Release --output-on-failure
 
     - name: Test (macOS)
