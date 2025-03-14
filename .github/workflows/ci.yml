@@ -11,6 +11,7 @@ jobs:
     name: ${{ matrix.os }}-build-and-test
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false  # Erlaube, dass andere Jobs weiterlaufen, wenn einer fehlschlägt
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
         include:
@@ -67,6 +68,21 @@ jobs:
         export LD_LIBRARY_PATH="$Qt6_DIR/lib:$LD_LIBRARY_PATH"
         echo "New LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
 
+    - name: Debug Qt Installation (Windows)
+      if: runner.os == 'Windows'
+      shell: cmd
+      run: |
+        echo "Qt installation directory:"
+        dir "%Qt6_DIR%"
+        echo "Qt bin directory:"
+        dir "%Qt6_DIR%\bin"
+        echo "Qt lib directory:"
+        dir "%Qt6_DIR%\lib"
+        echo "PATH: %PATH%"
+        echo "Adding Qt bin directory to PATH"
+        set PATH=%Qt6_DIR%\bin;%PATH%
+        echo "New PATH: %PATH%"
+
     - name: Create and Clean Build Directory
       shell: bash
       run: |
@@ -92,7 +108,8 @@ jobs:
         echo "Current directory: %CD%"
         echo "Workspace directory: %GITHUB_WORKSPACE%"
         dir "%GITHUB_WORKSPACE%"
-        cmake "%GITHUB_WORKSPACE%" -DCMAKE_BUILD_TYPE=Release
+        set PATH=%Qt6_DIR%\bin;%PATH%
+        cmake "%GITHUB_WORKSPACE%" -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="%Qt6_DIR%" -A x64
 
     - name: Build (Unix)
       if: runner.os != 'Windows'
@@ -106,7 +123,9 @@ jobs:
       if: runner.os == 'Windows'
       working-directory: ${{github.workspace}}\build
       shell: cmd
-      run: cmake --build . --config Release
+      run: |
+        set PATH=%Qt6_DIR%\bin;%PATH%
+        cmake --build . --config Release --verbose
 
     - name: Test (Linux)
       if: runner.os == 'Linux'
@@ -123,7 +142,9 @@ jobs:
       run: ctest -C Release --output-on-failure
 
     - name: Test (Windows)
-      if: runner.os == 'Windows'
+      if: runner.os == 'Windows' && success()
       working-directory: ${{github.workspace}}\build
       shell: cmd
-      run: ctest -C Release --output-on-failure 
+      run: |
+        set PATH=%Qt6_DIR%\bin;%PATH%
+        ctest -C Release --output-on-failure 
