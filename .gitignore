@@ -1,1 +1,49 @@
- 
+# Build-Ordner
+build/
+debug/
+release/
+*-build/
+
+# CMake-generierte Dateien
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+compile_commands.json
+CTestTestfile.cmake
+Makefile
+*.cmake
+!CMakeLists.txt
+
+# Qt-generierte Dateien
+moc_*.cpp
+qrc_*.cpp
+ui_*.h
+*.qm
+*.moc
+
+# Kompilierte Binärdateien
+*.o
+*.obj
+*.exe
+*.dll
+*.so
+*.dylib
+*.lib
+*.a
+*.app
+
+# IDE-spezifische Dateien
+.vscode/
+.idea/
+*.user
+*.pro.user
+*.pro.user.*
+*.qbs.user
+*.qbs.user.*
+*.autosave
+
+# Temporäre Dateien
+*.swp
+*~
+.DS_Store
+Thumbs.db 
