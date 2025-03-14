@@ -12,6 +12,7 @@
 #include <QColor>
 #include <QBrush>
 #include <QFont>
+#include <QSignalBlocker>
 
 // Füge die Namespace-Deklaration für die UI-Klasse hinzu
 namespace Ui {
@@ -39,6 +40,9 @@ MainWindow::MainWindow(QWidget *parent)
     m_model = new QStandardItemModel(this);
     m_proxyModel = new QSortFilterProxyModel(this);
     m_proxyModel->setSourceModel(m_model);
+    
+    // Verbinde das Signal itemChanged des Modells mit unserem Slot
+    connect(m_model, &QStandardItemModel::itemChanged, this, &MainWindow::onItemChanged);
     
     // Setze die Spaltenüberschriften
     QStringList headers;
@@ -148,23 +152,39 @@ void MainWindow::saveCharacters()
  */
 void MainWindow::on_addButton_clicked()
 {
+    qDebug() << "on_addButton_clicked: Start";
+    
     // Hole die Werte aus den Eingabefeldern
     QString name = ui->nameLineEdit->text().trimmed();
+    qDebug() << "on_addButton_clicked: Name =" << name;
+    
     int initiativeModifier = ui->initiativeSpinBox->value();
+    qDebug() << "on_addButton_clicked: Initiative =" << initiativeModifier;
+    
     int willSave = ui->willSpinBox->value();
+    qDebug() << "on_addButton_clicked: Will =" << willSave;
+    
     int reflexSave = ui->reflexSpinBox->value();
+    qDebug() << "on_addButton_clicked: Reflex =" << reflexSave;
+    
     int fortitudeSave = ui->fortitudeSpinBox->value();
+    qDebug() << "on_addButton_clicked: Fortitude =" << fortitudeSave;
     
     // Überprüfe, ob ein Name eingegeben wurde
     if (name.isEmpty()) {
         QMessageBox::warning(this, "Fehler", "Bitte geben Sie einen Namen ein.");
+        qDebug() << "on_addButton_clicked: Leerer Name, Abbruch";
         return;
     }
     
+    qDebug() << "on_addButton_clicked: Erstelle neuen Charakter";
     // Erstelle einen neuen Charakter und füge ihn hinzu
     Character character(name, initiativeModifier, willSave, reflexSave, fortitudeSave);
+    
+    qDebug() << "on_addButton_clicked: Füge Charakter zum Tracker hinzu";
     m_initiativeTracker.addCharacter(character);
     
+    qDebug() << "on_addButton_clicked: Leere Eingabefelder";
     // Leere die Eingabefelder
     ui->nameLineEdit->clear();
     ui->initiativeSpinBox->setValue(0);
@@ -172,6 +192,8 @@ void MainWindow::on_addButton_clicked()
     ui->reflexSpinBox->setValue(0);
     ui->fortitudeSpinBox->setValue(0);
     ui->nameLineEdit->setFocus();
+    
+    qDebug() << "on_addButton_clicked: Ende";
 }
 
 /**
@@ -280,20 +302,41 @@ void MainWindow::on_loadButton_clicked()
 
 void MainWindow::onCharactersChanged()
 {
+    static bool isUpdating = false;
+    
+    qDebug() << "onCharactersChanged: Start";
+    
+    // Verhindere rekursive Aufrufe
+    if (isUpdating) {
+        qDebug() << "onCharactersChanged: Bereits beim Aktualisieren, ignoriere";
+        return;
+    }
+    
+    isUpdating = true;
+    
     // Aktualisiere die Tabelle, wenn sich die Charakterliste ändert
     updateTable();
+    
+    isUpdating = false;
+    
+    qDebug() << "onCharactersChanged: Ende";
 }
 
 void MainWindow::onInitiativeRolled()
 {
+    qDebug() << "onInitiativeRolled: Start";
+    
     // Aktualisiere die Tabelle
     updateTable();
     
     // Sortiere nach Initiative
     ui->characterTableView->sortByColumn(TOTAL_INITIATIVE_COLUMN, Qt::DescendingOrder);
+    qDebug() << "onInitiativeRolled: Nach Initiative sortiert";
     
     // Aktualisiere die Buttons nach dem Sortieren
     QVector<Character> characters = m_initiativeTracker.getCharacters();
+    qDebug() << "onInitiativeRolled: Anzahl Charaktere =" << characters.size();
+    
     for (int i = 0; i < characters.size(); ++i) {
         const Character &character = characters[i];
         
@@ -302,12 +345,16 @@ void MainWindow::onInitiativeRolled()
         QModelIndex proxyIndex = m_proxyModel->mapFromSource(sourceIndex);
         int visualRow = proxyIndex.row();
         
+        qDebug() << "onInitiativeRolled: Charakter" << i << "(" << character.getName() << ") ist jetzt in Zeile" << visualRow;
+        
         // Erstelle die Buttons für die Würfelwürfe
         createRollButton(visualRow, ROLL_INITIATIVE_COLUMN, "d20", character.getInitiativeModifier(), "Würfeln");
         createRollButton(visualRow, ROLL_WILL_COLUMN, "will", character.getWillSave(), "Würfeln");
         createRollButton(visualRow, ROLL_REFLEX_COLUMN, "reflex", character.getReflexSave(), "Würfeln");
         createRollButton(visualRow, ROLL_FORTITUDE_COLUMN, "fortitude", character.getFortitudeSave(), "Würfeln");
     }
+    
+    qDebug() << "onInitiativeRolled: Ende";
 }
 
 void MainWindow::onSavesRolled()
@@ -318,17 +365,26 @@ void MainWindow::onSavesRolled()
 
 void MainWindow::updateTable()
 {
+    qDebug() << "updateTable: Start";
+    
     // Speichere den aktuell ausgewählten Index
     QModelIndex currentIndex = ui->characterTableView->currentIndex();
+    qDebug() << "updateTable: Aktueller Index =" << currentIndex;
     
     // Lösche alle Zeilen im Modell
     m_model->removeRows(0, m_model->rowCount());
+    qDebug() << "updateTable: Zeilen gelöscht";
     
     // Hole die Charakterliste
     QVector<Character> characters = m_initiativeTracker.getCharacters();
+    qDebug() << "updateTable: Anzahl Charaktere =" << characters.size();
+    
+    // Aktiviere die Bearbeitung für die Tabelle, damit die Buttons angezeigt werden können
+    ui->characterTableView->setEditTriggers(QAbstractItemView::DoubleClicked | QAbstractItemView::EditKeyPressed);
     
     // Füge jeden Charakter zur Tabelle hinzu
     for (int i = 0; i < characters.size(); ++i) {
+        qDebug() << "updateTable: Verarbeite Charakter" << i << ":" << characters[i].getName();
         const Character &character = characters[i];
         
         // Erstelle die Items für die Zeile
@@ -339,13 +395,17 @@ void MainWindow::updateTable()
         QFont boldFont = nameItem->font();
         boldFont.setBold(true);
         nameItem->setFont(boldFont);
+        nameItem->setEditable(false); // Name nicht editierbar
         rowItems.append(nameItem);
         
-        // Initiative Modifier
+        // Initiative Modifier - editierbar
         QStandardItem *initiativeModItem = new QStandardItem(QString::number(character.getInitiativeModifier()));
+        initiativeModItem->setEditable(true);
+        // Speichere den ursprünglichen Wert für die Wiederherstellung
+        initiativeModItem->setData(QString::number(character.getInitiativeModifier()), Qt::UserRole + 1);
         rowItems.append(initiativeModItem);
         
-        // Initiative Ergebnis
+        // Initiative Ergebnis - nicht editierbar
         QStandardItem *totalInitiativeItem = new QStandardItem();
         if (character.getInitiativeRoll() > 0) {
             totalInitiativeItem->setText(QString("%1 (%2)").arg(character.getTotalInitiative())
@@ -357,17 +417,22 @@ void MainWindow::updateTable()
         QFont totalFont = totalInitiativeItem->font();
         totalFont.setBold(true);
         totalInitiativeItem->setFont(totalFont);
+        totalInitiativeItem->setEditable(false);
         rowItems.append(totalInitiativeItem);
         
         // Initiative würfeln (leere Zelle für den Button)
         QStandardItem *rollInitiativeItem = new QStandardItem();
+        rollInitiativeItem->setEditable(false);
         rowItems.append(rollInitiativeItem);
         
-        // Willenskraft Modifikator
+        // Willenskraft Modifikator - editierbar
         QStandardItem *willSaveItem = new QStandardItem(QString::number(character.getWillSave()));
+        willSaveItem->setEditable(true);
+        // Speichere den ursprünglichen Wert für die Wiederherstellung
+        willSaveItem->setData(QString::number(character.getWillSave()), Qt::UserRole + 1);
         rowItems.append(willSaveItem);
         
-        // Willenskraft Ergebnis
+        // Willenskraft Ergebnis - nicht editierbar
         QStandardItem *willResultItem = new QStandardItem();
         if (character.getLastWillSaveRoll() > 0) {
             willResultItem->setText(QString("%1 (%2)").arg(character.getLastWillSaveRoll() + character.getWillSave())
@@ -376,17 +441,22 @@ void MainWindow::updateTable()
         } else {
             willResultItem->setText("-");
         }
+        willResultItem->setEditable(false);
         rowItems.append(willResultItem);
         
         // Willenskraft würfeln (leere Zelle für den Button)
         QStandardItem *rollWillItem = new QStandardItem();
+        rollWillItem->setEditable(false);
         rowItems.append(rollWillItem);
         
-        // Reflex Modifikator
+        // Reflex Modifikator - editierbar
         QStandardItem *reflexSaveItem = new QStandardItem(QString::number(character.getReflexSave()));
+        reflexSaveItem->setEditable(true);
+        // Speichere den ursprünglichen Wert für die Wiederherstellung
+        reflexSaveItem->setData(QString::number(character.getReflexSave()), Qt::UserRole + 1);
         rowItems.append(reflexSaveItem);
         
-        // Reflex Ergebnis
+        // Reflex Ergebnis - nicht editierbar
         QStandardItem *reflexResultItem = new QStandardItem();
         if (character.getLastReflexSaveRoll() > 0) {
             reflexResultItem->setText(QString("%1 (%2)").arg(character.getLastReflexSaveRoll() + character.getReflexSave())
@@ -395,17 +465,22 @@ void MainWindow::updateTable()
         } else {
             reflexResultItem->setText("-");
         }
+        reflexResultItem->setEditable(false);
         rowItems.append(reflexResultItem);
         
         // Reflex würfeln (leere Zelle für den Button)
         QStandardItem *rollReflexItem = new QStandardItem();
+        rollReflexItem->setEditable(false);
         rowItems.append(rollReflexItem);
         
-        // Konstitution Modifikator
+        // Konstitution Modifikator - editierbar
         QStandardItem *fortitudeSaveItem = new QStandardItem(QString::number(character.getFortitudeSave()));
+        fortitudeSaveItem->setEditable(true);
+        // Speichere den ursprünglichen Wert für die Wiederherstellung
+        fortitudeSaveItem->setData(QString::number(character.getFortitudeSave()), Qt::UserRole + 1);
         rowItems.append(fortitudeSaveItem);
         
-        // Konstitution Ergebnis
+        // Konstitution Ergebnis - nicht editierbar
         QStandardItem *fortitudeResultItem = new QStandardItem();
         if (character.getLastFortitudeSaveRoll() > 0) {
             fortitudeResultItem->setText(QString("%1 (%2)").arg(character.getLastFortitudeSaveRoll() + character.getFortitudeSave())
@@ -414,21 +489,32 @@ void MainWindow::updateTable()
         } else {
             fortitudeResultItem->setText("-");
         }
+        fortitudeResultItem->setEditable(false);
         rowItems.append(fortitudeResultItem);
         
         // Konstitution würfeln (leere Zelle für den Button)
         QStandardItem *rollFortitudeItem = new QStandardItem();
+        rollFortitudeItem->setEditable(false);
         rowItems.append(rollFortitudeItem);
         
         // Füge die Zeile zum Modell hinzu
         m_model->appendRow(rowItems);
+        qDebug() << "updateTable: Zeile für Charakter" << i << "hinzugefügt";
+        
+        // Speichere die Zeilen-ID als Eigenschaft für jedes Item
+        for (QStandardItem *item : rowItems) {
+            item->setData(i, Qt::UserRole);
+        }
     }
     
+    qDebug() << "updateTable: Erstelle Buttons";
     // Erstelle die Buttons für alle Zeilen
     for (int i = 0; i < characters.size(); ++i) {
         const Character &character = characters[i];
         
         // Erstelle die Buttons für die Würfelwürfe
+        qDebug() << "updateTable: Erstelle Buttons für Zeile" << i;
+        
         createRollButton(i, ROLL_INITIATIVE_COLUMN, "d20", character.getInitiativeModifier(), "Würfeln");
         createRollButton(i, ROLL_WILL_COLUMN, "will", character.getWillSave(), "Würfeln");
         createRollButton(i, ROLL_REFLEX_COLUMN, "reflex", character.getReflexSave(), "Würfeln");
@@ -438,11 +524,16 @@ void MainWindow::updateTable()
     // Stelle die Auswahl wieder her, falls möglich
     if (currentIndex.isValid() && currentIndex.row() < characters.size()) {
         ui->characterTableView->setCurrentIndex(currentIndex);
+        qDebug() << "updateTable: Auswahl wiederhergestellt";
     }
+    
+    qDebug() << "updateTable: Ende";
 }
 
 void MainWindow::createRollButton(int row, int column, const QString &diceType, int modifier, const QString &label)
 {
+    qDebug() << "createRollButton: Start - Zeile:" << row << "Spalte:" << column << "Typ:" << diceType;
+    
     // Erstelle einen Button für den Würfelwurf
     QPushButton *button = new QPushButton(label);
     button->setProperty("row", row);
@@ -450,14 +541,26 @@ void MainWindow::createRollButton(int row, int column, const QString &diceType, 
     button->setProperty("diceType", diceType);
     button->setProperty("modifier", modifier);
     
+    qDebug() << "createRollButton: Button erstellt";
+    
     // Verbinde den Button mit dem Slot
     connect(button, &QPushButton::clicked, this, &MainWindow::onRollDiceButtonClicked);
     
+    qDebug() << "createRollButton: Button verbunden";
+    
     // Setze den Button in die Tabelle
     QModelIndex index = m_proxyModel->index(row, column);
+    qDebug() << "createRollButton: Index erstellt - gültig:" << index.isValid() << " Zeile:" << index.row() << " Spalte:" << index.column();
+    
     if (index.isValid()) {
         ui->characterTableView->setIndexWidget(index, button);
+        qDebug() << "createRollButton: Button in Tabelle gesetzt";
+    } else {
+        qDebug() << "createRollButton: Ungültiger Index, Button nicht gesetzt";
+        delete button; // Verhindere Memory-Leak
     }
+    
+    qDebug() << "createRollButton: Ende";
 }
 
 void MainWindow::onRollDiceButtonClicked()
@@ -508,4 +611,58 @@ void MainWindow::on_rollFortitudeButton_clicked()
 {
     // Würfle Konstitution-Rettungswürfe für alle Charaktere
     m_initiativeTracker.rollAllFortitudeSaves();
+}
+
+void MainWindow::onItemChanged(QStandardItem *item)
+{
+    qDebug() << "onItemChanged: Start - Spalte:" << item->column();
+    
+    // Hole die Zeilen-ID aus den Eigenschaften des Items
+    int characterIndex = item->data(Qt::UserRole).toInt();
+    qDebug() << "onItemChanged: Character-Index:" << characterIndex;
+    
+    // Hole die Spalte des geänderten Items
+    int column = item->column();
+    
+    // Überprüfe, ob die Spalte editierbar ist
+    if (column != 1 && column != 4 && column != 7 && column != 10) {
+        qDebug() << "onItemChanged: Spalte nicht editierbar, ignoriere Änderung";
+        return;
+    }
+    
+    // Hole den neuen Wert
+    bool ok;
+    int newValue = item->text().toInt(&ok);
+    qDebug() << "onItemChanged: Neuer Wert:" << newValue << "Gültig:" << ok;
+    
+    // Wenn der Wert kein gültiger Integer ist, ignoriere die Änderung
+    if (!ok) {
+        qDebug() << "onItemChanged: Ungültiger Wert, ignoriere Änderung";
+        // Blockiere Signale, um eine Endlosschleife zu vermeiden
+        QSignalBlocker blocker(m_model);
+        item->setText(item->data(Qt::UserRole + 1).toString()); // Stelle den ursprünglichen Wert wieder her
+        return;
+    }
+    
+    // Aktualisiere den entsprechenden Wert im Character-Objekt
+    Character &character = m_initiativeTracker.getCharacterRef(characterIndex);
+    
+    // Blockiere Signale, um eine Endlosschleife zu vermeiden
+    QSignalBlocker blocker(m_model);
+    
+    if (column == 1) { // Initiative Modifier
+        qDebug() << "onItemChanged: Setze Initiative Modifier auf" << newValue;
+        character.setInitiativeModifier(newValue);
+    } else if (column == 4) { // Willenskraft
+        qDebug() << "onItemChanged: Setze Willenskraft auf" << newValue;
+        character.setWillSave(newValue);
+    } else if (column == 7) { // Reflex
+        qDebug() << "onItemChanged: Setze Reflex auf" << newValue;
+        character.setReflexSave(newValue);
+    } else if (column == 10) { // Konstitution
+        qDebug() << "onItemChanged: Setze Konstitution auf" << newValue;
+        character.setFortitudeSave(newValue);
+    }
+    
+    qDebug() << "onItemChanged: Ende";
 } 

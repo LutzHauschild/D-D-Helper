@@ -23,11 +23,17 @@ InitiativeTracker::InitiativeTracker(QObject *parent)
  */
 void InitiativeTracker::addCharacter(const Character &character)
 {
+    qDebug() << "InitiativeTracker::addCharacter: Start - Name:" << character.getName();
+    
     // Füge den Charakter zur Liste hinzu
     m_characters.append(character);
+    qDebug() << "InitiativeTracker::addCharacter: Charakter hinzugefügt, neue Größe:" << m_characters.size();
     
     // Sende ein Signal, dass sich die Charakterliste geändert hat
+    qDebug() << "InitiativeTracker::addCharacter: Sende Signal charactersChanged";
     emit charactersChanged();
+    
+    qDebug() << "InitiativeTracker::addCharacter: Ende";
 }
 
 /**
@@ -333,4 +339,24 @@ void InitiativeTracker::rollFortitudeSaveForCharacter(int index)
         // Sende ein Signal, dass Rettungswürfe gewürfelt wurden
         emit savesRolled();
     }
+}
+
+Character& InitiativeTracker::getCharacterRef(int index)
+{
+    // Überprüfe, ob die Liste leer ist
+    if (m_characters.isEmpty()) {
+        qWarning() << "Zugriff auf leere Charakterliste";
+        // Füge einen temporären Charakter hinzu, um einen Absturz zu vermeiden
+        m_characters.append(Character("Temporär", 0, 0, 0, 0));
+        return m_characters[0];
+    }
+    
+    // Überprüfe, ob der Index gültig ist
+    if (index < 0 || index >= m_characters.size()) {
+        // Wenn nicht, gib eine Referenz auf den ersten Charakter zurück
+        qWarning() << "Ungültiger Index:" << index;
+        return m_characters[0];
+    }
+    
+    return m_characters[index];
 } 

@@ -84,6 +84,14 @@ public:
     QVector<Character> getCharacters() const;
     
     /**
+     * @brief Gibt eine Referenz auf einen Charakter zurück.
+     * 
+     * @param index Der Index des Charakters in der Liste
+     * @return Eine Referenz auf den Charakter
+     */
+    Character& getCharacterRef(int index);
+    
+    /**
      * @brief Aktualisiert einen Charakter in der Liste.
      * 
      * @param index Der Index des zu aktualisierenden Charakters
@@ -108,13 +116,9 @@ public:
     void rollInitiativeForCharacter(int index);
     
     /**
-     * @brief Gibt eine nach Initiative sortierte Charakterliste zurück.
+     * @brief Gibt die sortierte Liste der Charaktere nach Initiative zurück.
      * 
-     * Qt-Konzept: Algorithmen und Sortieren
-     * Qt-Container können mit std::sort oder Qt-eigenen Sortierfunktionen
-     * sortiert werden. Hier wird eine sortierte Kopie der Charakterliste erstellt.
-     * 
-     * @return Ein QVector mit den sortierten Charakteren
+     * @return Die sortierte Liste der Charaktere als QVector
      */
     QVector<Character> getSortedInitiativeOrder() const;
     

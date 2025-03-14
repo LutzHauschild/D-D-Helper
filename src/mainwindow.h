@@ -143,6 +143,15 @@ private slots:
      */
     void onSavesRolled();
     
+    /**
+     * @brief Slot, der aufgerufen wird, wenn ein Item im Modell geändert wurde.
+     * 
+     * Aktualisiert das entsprechende Character-Objekt mit dem neuen Wert.
+     * 
+     * @param item Das geänderte Item
+     */
+    void onItemChanged(QStandardItem *item);
+    
 private:
     /**
      * @brief Aktualisiert die Tabelle mit den aktuellen Charakterdaten.
