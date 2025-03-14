@@ -11,9 +11,9 @@ set(CMAKE_AUTOUIC ON)
 # Aktiviere Tests
 enable_testing()
 
-find_package(Qt6 COMPONENTS Widgets REQUIRED)
+find_package(Qt6 COMPONENTS Widgets WebSockets REQUIRED)
 if (NOT Qt6_FOUND)
-    find_package(Qt5 5.15 COMPONENTS Widgets REQUIRED)
+    find_package(Qt5 5.15 COMPONENTS Widgets WebSockets REQUIRED)
 endif()
 
 set(PROJECT_SOURCES
@@ -29,10 +29,10 @@ set(PROJECT_SOURCES
 
 if (Qt6_FOUND)
     qt_add_executable(DnDInitiativeTracker ${PROJECT_SOURCES})
-    target_link_libraries(DnDInitiativeTracker PRIVATE Qt6::Widgets)
+    target_link_libraries(DnDInitiativeTracker PRIVATE Qt6::Widgets Qt6::WebSockets)
 else()
     add_executable(DnDInitiativeTracker ${PROJECT_SOURCES})
-    target_link_libraries(DnDInitiativeTracker PRIVATE Qt5::Widgets)
+    target_link_libraries(DnDInitiativeTracker PRIVATE Qt5::Widgets Qt5::WebSockets)
 endif()
 
 # Füge das Tests-Verzeichnis hinzu

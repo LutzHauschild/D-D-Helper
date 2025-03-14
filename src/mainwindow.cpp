@@ -13,6 +13,9 @@
 #include <QBrush>
 #include <QFont>
 #include <QSignalBlocker>
+#include <QVBoxLayout>
+#include <QJsonDocument>
+#include <QJsonObject>
 
 // Füge die Namespace-Deklaration für die UI-Klasse hinzu
 namespace Ui {
@@ -67,6 +70,25 @@ MainWindow::MainWindow(QWidget *parent)
     connect(&m_initiativeTracker, &InitiativeTracker::initiativeRolled, this, &MainWindow::onInitiativeRolled);
     connect(&m_initiativeTracker, &InitiativeTracker::savesRolled, this, &MainWindow::onSavesRolled);
     
+    // Erstelle das TextEdit für die empfangenen Nachrichten
+    m_messageDisplay = new QTextEdit(this);
+    m_messageDisplay->setReadOnly(true);
+    m_messageDisplay->setPlaceholderText("Hier werden empfangene Nachrichten angezeigt...");
+    
+    // Füge das TextEdit zum Layout hinzu
+    QVBoxLayout* mainLayout = qobject_cast<QVBoxLayout*>(ui->centralwidget->layout());
+    if (mainLayout) {
+        mainLayout->addWidget(m_messageDisplay);
+    } else {
+        // Fallback, falls das Layout nicht gefunden wird
+        QVBoxLayout* newLayout = new QVBoxLayout();
+        newLayout->addWidget(m_messageDisplay);
+        ui->centralwidget->setLayout(newLayout);
+    }
+    
+    // Initialisiere den WebSocket-Server
+    setupWebSocketServer();
+    
     // Lade gespeicherte Charaktere, falls vorhanden
     if (m_initiativeTracker.loadFromFile()) {
         qDebug() << "Charakterdaten erfolgreich geladen.";
@@ -86,6 +108,12 @@ MainWindow::~MainWindow()
     // Speichere die Charaktere beim Beenden
     if (m_initiativeTracker.saveToFile()) {
         qDebug() << "Charakterdaten erfolgreich gespeichert.";
+    }
+    
+    // Schließe den WebSocket-Server
+    if (m_webSocketServer) {
+        m_webSocketServer->close();
+        qDeleteAll(m_clients);
     }
     
     delete ui;
@@ -665,4 +693,151 @@ void MainWindow::onItemChanged(QStandardItem *item)
     }
     
     qDebug() << "onItemChanged: Ende";
+}
+
+/**
+ * @brief Richtet den WebSocket-Server ein
+ * 
+ * Erstellt und konfiguriert den WebSocket-Server, der auf eingehende
+ * Verbindungen wartet und Nachrichten empfängt.
+ */
+void MainWindow::setupWebSocketServer()
+{
+    qDebug() << "setupWebSocketServer: Start";
+    
+    // Erstelle den WebSocket-Server
+    m_webSocketServer = new QWebSocketServer(QStringLiteral("D&D Initiative Tracker Server"),
+                                            QWebSocketServer::NonSecureMode, this);
+    
+    // Versuche, den Server auf Port 8080 zu starten
+    if (m_webSocketServer->listen(QHostAddress::LocalHost, 8080)) {
+        qDebug() << "WebSocket-Server gestartet auf Port 8080";
+        
+        // Verbinde das Signal für neue Verbindungen
+        connect(m_webSocketServer, &QWebSocketServer::newConnection,
+                this, &MainWindow::onNewWebSocketConnection);
+        
+        // Zeige eine Meldung im TextEdit an
+        m_messageDisplay->append("WebSocket-Server gestartet auf ws://localhost:8080");
+        m_messageDisplay->append("Warte auf Verbindungen...");
+    } else {
+        qDebug() << "Fehler beim Starten des WebSocket-Servers:" << m_webSocketServer->errorString();
+        m_messageDisplay->append("Fehler beim Starten des WebSocket-Servers: " + m_webSocketServer->errorString());
+    }
+    
+    qDebug() << "setupWebSocketServer: Ende";
+}
+
+/**
+ * @brief Slot, der aufgerufen wird, wenn eine neue WebSocket-Verbindung hergestellt wird
+ * 
+ * Akzeptiert die Verbindung, verbindet die Signale und fügt den Client zur Liste hinzu.
+ */
+void MainWindow::onNewWebSocketConnection()
+{
+    qDebug() << "onNewWebSocketConnection: Neue Verbindung";
+    
+    // Akzeptiere die Verbindung
+    QWebSocket *socket = m_webSocketServer->nextPendingConnection();
+    
+    // Verbinde die Signale
+    connect(socket, &QWebSocket::textMessageReceived, this, &MainWindow::processWebSocketMessage);
+    connect(socket, &QWebSocket::disconnected, this, &MainWindow::socketDisconnected);
+    
+    // Füge den Client zur Liste hinzu
+    m_clients << socket;
+    
+    // Zeige eine Meldung im TextEdit an
+    m_messageDisplay->append("Neue Verbindung hergestellt: " + socket->peerAddress().toString());
+    
+    qDebug() << "onNewWebSocketConnection: Client hinzugefügt";
+}
+
+/**
+ * @brief Verarbeitet eine empfangene WebSocket-Nachricht
+ * 
+ * Parst die JSON-Nachricht und zeigt sie im TextEdit an.
+ * 
+ * @param message Die empfangene Nachricht
+ */
+void MainWindow::processWebSocketMessage(const QString &message)
+{
+    qDebug() << "processWebSocketMessage: Nachricht empfangen:" << message;
+    
+    // Zeige die Nachricht im TextEdit an
+    displayReceivedMessage(message);
+    
+    // Versuche, die Nachricht als JSON zu parsen
+    QJsonDocument jsonDoc = QJsonDocument::fromJson(message.toUtf8());
+    if (!jsonDoc.isNull() && jsonDoc.isObject()) {
+        QJsonObject jsonObj = jsonDoc.object();
+        
+        // Hier kannst du die JSON-Nachricht verarbeiten
+        // Beispiel: Wenn die Nachricht einen "command"-Schlüssel hat
+        if (jsonObj.contains("command")) {
+            QString command = jsonObj["command"].toString();
+            
+            if (command == "rollInitiative") {
+                // Initiative für alle Charaktere würfeln
+                m_initiativeTracker.rollAllInitiatives();
+                
+                // Sende eine Antwort zurück
+                QWebSocket *client = qobject_cast<QWebSocket *>(sender());
+                if (client) {
+                    QJsonObject response;
+                    response["status"] = "success";
+                    response["message"] = "Initiative für alle Charaktere gewürfelt";
+                    client->sendTextMessage(QJsonDocument(response).toJson());
+                }
+            }
+            // Weitere Befehle können hier hinzugefügt werden
+        }
+    }
+    
+    qDebug() << "processWebSocketMessage: Ende";
+}
+
+/**
+ * @brief Zeigt eine empfangene Nachricht im TextEdit an
+ * 
+ * Formatiert die Nachricht und fügt sie zum TextEdit hinzu.
+ * 
+ * @param message Die anzuzeigende Nachricht
+ */
+void MainWindow::displayReceivedMessage(const QString &message)
+{
+    qDebug() << "displayReceivedMessage: Start";
+    
+    // Formatiere die Nachricht für die Anzeige
+    QString formattedMessage = QTime::currentTime().toString("[hh:mm:ss] ") + message;
+    
+    // Füge die Nachricht zum TextEdit hinzu
+    m_messageDisplay->append(formattedMessage);
+    
+    qDebug() << "displayReceivedMessage: Ende";
+}
+
+/**
+ * @brief Slot, der aufgerufen wird, wenn eine WebSocket-Verbindung getrennt wird
+ * 
+ * Entfernt den Client aus der Liste und gibt die Ressourcen frei.
+ */
+void MainWindow::socketDisconnected()
+{
+    qDebug() << "socketDisconnected: Start";
+    
+    // Hole den Sender
+    QWebSocket *client = qobject_cast<QWebSocket *>(sender());
+    if (client) {
+        // Entferne den Client aus der Liste
+        m_clients.removeAll(client);
+        
+        // Zeige eine Meldung im TextEdit an
+        m_messageDisplay->append("Verbindung getrennt: " + client->peerAddress().toString());
+        
+        // Gib die Ressourcen frei
+        client->deleteLater();
+    }
+    
+    qDebug() << "socketDisconnected: Ende";
 } 

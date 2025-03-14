@@ -9,6 +9,9 @@
 #include <QDesktopServices>
 #include <QUrl>
 #include <QPushButton>
+#include <QWebSocketServer>
+#include <QWebSocket>
+#include <QTextEdit>
 #include "initiativetracker.h"
 
 QT_BEGIN_NAMESPACE
@@ -152,6 +155,23 @@ private slots:
      */
     void onItemChanged(QStandardItem *item);
     
+    /**
+     * @brief Slot, der aufgerufen wird, wenn eine neue WebSocket-Verbindung hergestellt wird.
+     */
+    void onNewWebSocketConnection();
+    
+    /**
+     * @brief Slot, der aufgerufen wird, wenn eine Nachricht von einem WebSocket empfangen wird.
+     * 
+     * @param message Die empfangene Nachricht
+     */
+    void processWebSocketMessage(const QString &message);
+    
+    /**
+     * @brief Slot, der aufgerufen wird, wenn eine WebSocket-Verbindung getrennt wird.
+     */
+    void socketDisconnected();
+
 private:
     /**
      * @brief Aktualisiert die Tabelle mit den aktuellen Charakterdaten.
@@ -178,10 +198,18 @@ private:
     QSortFilterProxyModel *m_proxyModel;     ///< Das Proxy-Modell für die Sortierung der Tabelle
     
     // Spaltenindizes für die Tabelle
+    static const int NAME_COLUMN = 0;
+    static const int INITIATIVE_MOD_COLUMN = 1;
     static const int TOTAL_INITIATIVE_COLUMN = 2;
     static const int ROLL_INITIATIVE_COLUMN = 3;
+    static const int WILL_SAVE_COLUMN = 4;
+    static const int WILL_RESULT_COLUMN = 5;
     static const int ROLL_WILL_COLUMN = 6;
+    static const int REFLEX_SAVE_COLUMN = 7;
+    static const int REFLEX_RESULT_COLUMN = 8;
     static const int ROLL_REFLEX_COLUMN = 9;
+    static const int FORTITUDE_SAVE_COLUMN = 10;
+    static const int FORTITUDE_RESULT_COLUMN = 11;
     static const int ROLL_FORTITUDE_COLUMN = 12;
     
     /**
@@ -199,6 +227,23 @@ private:
      * für den nächsten Start zu speichern.
      */
     void saveCharacters();
+    
+    /**
+     * @brief Setzt die WebSocket-Server-Einrichtung auf.
+     */
+    void setupWebSocketServer();
+    
+    /**
+     * @brief Zeigt eine empfangene Nachricht an.
+     * 
+     * @param message Die empfangene Nachricht
+     */
+    void displayReceivedMessage(const QString &message);
+    
+    // Neue WebSocket-Member
+    QWebSocketServer *m_webSocketServer;
+    QList<QWebSocket*> m_clients;
+    QTextEdit *m_messageDisplay;
 };
 
 #endif // MAINWINDOW_H 
