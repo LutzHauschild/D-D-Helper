@@ -168,21 +168,12 @@ private:
     QStandardItemModel *m_model;             ///< Das Datenmodell für die Tabelle
     QSortFilterProxyModel *m_proxyModel;     ///< Das Proxy-Modell für die Sortierung der Tabelle
     
-    // Konstanten für die Tabellenspalten
-    enum Columns {
-        NAME_COLUMN = 0,
-        INITIATIVE_MOD_COLUMN,
-        INITIATIVE_ROLL_COLUMN,
-        TOTAL_INITIATIVE_COLUMN,
-        ROLL_INITIATIVE_COLUMN,
-        WILL_SAVE_COLUMN,
-        REFLEX_SAVE_COLUMN,
-        FORTITUDE_SAVE_COLUMN,
-        ROLL_WILL_COLUMN,
-        ROLL_REFLEX_COLUMN,
-        ROLL_FORTITUDE_COLUMN,
-        COLUMN_COUNT
-    };
+    // Spaltenindizes für die Tabelle
+    static const int TOTAL_INITIATIVE_COLUMN = 2;
+    static const int ROLL_INITIATIVE_COLUMN = 3;
+    static const int ROLL_WILL_COLUMN = 6;
+    static const int ROLL_REFLEX_COLUMN = 9;
+    static const int ROLL_FORTITUDE_COLUMN = 12;
     
     /**
      * @brief Lädt die gespeicherten Charakterdaten.

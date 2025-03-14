@@ -42,9 +42,11 @@ MainWindow::MainWindow(QWidget *parent)
     
     // Setze die Spaltenüberschriften
     QStringList headers;
-    headers << "Name" << "Initiative Mod" << "Würfel" << "Gesamt" << "Würfeln"
-            << "Willenskraft" << "Reflex" << "Konstitution" 
-            << "Will würfeln" << "Reflex würfeln" << "Konst. würfeln";
+    headers << "Name" 
+            << "Initiative Mod" << "Initiative Ergebnis" << "Würfeln"
+            << "Willenskraft" << "Will Ergebnis" << "Würfeln"
+            << "Reflex" << "Reflex Ergebnis" << "Würfeln"
+            << "Konstitution" << "Konst. Ergebnis" << "Würfeln";
     m_model->setHorizontalHeaderLabels(headers);
     // Konfiguriere die TableView
     ui->characterTableView->setModel(m_proxyModel);
@@ -343,73 +345,76 @@ void MainWindow::updateTable()
         QStandardItem *initiativeModItem = new QStandardItem(QString::number(character.getInitiativeModifier()));
         rowItems.append(initiativeModItem);
         
-        // Initiative Würfel
-        QStandardItem *initiativeRollItem = new QStandardItem();
-        if (character.getInitiativeRoll() > 0) {
-            initiativeRollItem->setText(QString::number(character.getInitiativeRoll()));
-        }
-        rowItems.append(initiativeRollItem);
-        
-        // Gesamt-Initiative
+        // Initiative Ergebnis
         QStandardItem *totalInitiativeItem = new QStandardItem();
         if (character.getInitiativeRoll() > 0) {
-            totalInitiativeItem->setText(QString("%1 (%2)").arg(character.getInitiativeModifier())
-                                        .arg(character.getTotalInitiative()));
+            totalInitiativeItem->setText(QString("%1 (%2)").arg(character.getTotalInitiative())
+                                        .arg(character.getInitiativeRoll()));
+            totalInitiativeItem->setForeground(QBrush(QColor(0, 100, 0))); // Dunkelgrün
         } else {
-            totalInitiativeItem->setText(QString::number(character.getInitiativeModifier()));
+            totalInitiativeItem->setText("-");
         }
         QFont totalFont = totalInitiativeItem->font();
         totalFont.setBold(true);
         totalInitiativeItem->setFont(totalFont);
-        if (character.getTotalInitiative() > 0) {
-            totalInitiativeItem->setForeground(QBrush(QColor(0, 100, 0))); // Dunkelgrün
-        }
         rowItems.append(totalInitiativeItem);
         
         // Initiative würfeln (leere Zelle für den Button)
         QStandardItem *rollInitiativeItem = new QStandardItem();
         rowItems.append(rollInitiativeItem);
         
-        // Willenskraft
-        QStandardItem *willSaveItem = new QStandardItem();
-        if (character.getLastWillSaveRoll() > 0) {
-            willSaveItem->setText(QString("%1 (%2)").arg(character.getWillSave())
-                                 .arg(character.getLastWillSaveRoll() + character.getWillSave()));
-            willSaveItem->setForeground(QBrush(QColor(0, 100, 0))); // Dunkelgrün
-        } else {
-            willSaveItem->setText(QString::number(character.getWillSave()));
-        }
+        // Willenskraft Modifikator
+        QStandardItem *willSaveItem = new QStandardItem(QString::number(character.getWillSave()));
         rowItems.append(willSaveItem);
         
-        // Reflex
-        QStandardItem *reflexSaveItem = new QStandardItem();
-        if (character.getLastReflexSaveRoll() > 0) {
-            reflexSaveItem->setText(QString("%1 (%2)").arg(character.getReflexSave())
-                                   .arg(character.getLastReflexSaveRoll() + character.getReflexSave()));
-            reflexSaveItem->setForeground(QBrush(QColor(0, 100, 0))); // Dunkelgrün
+        // Willenskraft Ergebnis
+        QStandardItem *willResultItem = new QStandardItem();
+        if (character.getLastWillSaveRoll() > 0) {
+            willResultItem->setText(QString("%1 (%2)").arg(character.getLastWillSaveRoll() + character.getWillSave())
+                                   .arg(character.getLastWillSaveRoll()));
+            willResultItem->setForeground(QBrush(QColor(0, 100, 0))); // Dunkelgrün
         } else {
-            reflexSaveItem->setText(QString::number(character.getReflexSave()));
+            willResultItem->setText("-");
         }
-        rowItems.append(reflexSaveItem);
-        
-        // Konstitution
-        QStandardItem *fortitudeSaveItem = new QStandardItem();
-        if (character.getLastFortitudeSaveRoll() > 0) {
-            fortitudeSaveItem->setText(QString("%1 (%2)").arg(character.getFortitudeSave())
-                                      .arg(character.getLastFortitudeSaveRoll() + character.getFortitudeSave()));
-            fortitudeSaveItem->setForeground(QBrush(QColor(0, 100, 0))); // Dunkelgrün
-        } else {
-            fortitudeSaveItem->setText(QString::number(character.getFortitudeSave()));
-        }
-        rowItems.append(fortitudeSaveItem);
+        rowItems.append(willResultItem);
         
         // Willenskraft würfeln (leere Zelle für den Button)
         QStandardItem *rollWillItem = new QStandardItem();
         rowItems.append(rollWillItem);
         
+        // Reflex Modifikator
+        QStandardItem *reflexSaveItem = new QStandardItem(QString::number(character.getReflexSave()));
+        rowItems.append(reflexSaveItem);
+        
+        // Reflex Ergebnis
+        QStandardItem *reflexResultItem = new QStandardItem();
+        if (character.getLastReflexSaveRoll() > 0) {
+            reflexResultItem->setText(QString("%1 (%2)").arg(character.getLastReflexSaveRoll() + character.getReflexSave())
+                                     .arg(character.getLastReflexSaveRoll()));
+            reflexResultItem->setForeground(QBrush(QColor(0, 100, 0))); // Dunkelgrün
+        } else {
+            reflexResultItem->setText("-");
+        }
+        rowItems.append(reflexResultItem);
+        
         // Reflex würfeln (leere Zelle für den Button)
         QStandardItem *rollReflexItem = new QStandardItem();
         rowItems.append(rollReflexItem);
+        
+        // Konstitution Modifikator
+        QStandardItem *fortitudeSaveItem = new QStandardItem(QString::number(character.getFortitudeSave()));
+        rowItems.append(fortitudeSaveItem);
+        
+        // Konstitution Ergebnis
+        QStandardItem *fortitudeResultItem = new QStandardItem();
+        if (character.getLastFortitudeSaveRoll() > 0) {
+            fortitudeResultItem->setText(QString("%1 (%2)").arg(character.getLastFortitudeSaveRoll() + character.getFortitudeSave())
+                                        .arg(character.getLastFortitudeSaveRoll()));
+            fortitudeResultItem->setForeground(QBrush(QColor(0, 100, 0))); // Dunkelgrün
+        } else {
+            fortitudeResultItem->setText("-");
+        }
+        rowItems.append(fortitudeResultItem);
         
         // Konstitution würfeln (leere Zelle für den Button)
         QStandardItem *rollFortitudeItem = new QStandardItem();
