@@ -28,59 +28,37 @@
          </property>
         </widget>
        </item>
-       <item row="0" column="1">
+       <item row="0" column="1" colspan="3">
         <widget class="QLineEdit" name="nameLineEdit"/>
        </item>
-       <item row="0" column="2">
-        <widget class="QLabel" name="initiativeLabel">
-         <property name="text">
-          <string>Initiative Mod:</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="3">
-        <widget class="QSpinBox" name="initiativeSpinBox">
-         <property name="minimum">
-          <number>-20</number>
-         </property>
-         <property name="maximum">
-          <number>20</number>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="4" rowspan="2">
+       <item row="0" column="4" rowspan="3">
         <widget class="QPushButton" name="addButton">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
          <property name="text">
           <string>Hinzufügen</string>
          </property>
         </widget>
        </item>
        <item row="1" column="0">
-        <widget class="QLabel" name="willLabel">
+        <widget class="QLabel" name="initiativeLabel">
          <property name="text">
-          <string>Willenskraft:</string>
+          <string>Initiative:</string>
          </property>
         </widget>
        </item>
        <item row="1" column="1">
-        <widget class="QSpinBox" name="willSpinBox">
-         <property name="minimum">
-          <number>-20</number>
+        <widget class="QSpinBox" name="initiativeSpinBox">
+         <property name="minimumSize">
+          <size>
+           <width>80</width>
+           <height>0</height>
+          </size>
          </property>
-         <property name="maximum">
-          <number>20</number>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="2">
-        <widget class="QLabel" name="reflexLabel">
-         <property name="text">
-          <string>Reflex:</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="3">
-        <widget class="QSpinBox" name="reflexSpinBox">
          <property name="minimum">
           <number>-20</number>
          </property>
@@ -90,21 +68,101 @@
         </widget>
        </item>
        <item row="2" column="0">
-        <widget class="QLabel" name="fortitudeLabel">
+        <widget class="QLabel" name="savesLabel">
          <property name="text">
-          <string>Konstitution:</string>
+          <string>Rettungswürfe:</string>
          </property>
         </widget>
        </item>
        <item row="2" column="1">
-        <widget class="QSpinBox" name="fortitudeSpinBox">
-         <property name="minimum">
-          <number>-20</number>
-         </property>
-         <property name="maximum">
-          <number>20</number>
-         </property>
-        </widget>
+        <layout class="QHBoxLayout" name="savesLayout">
+         <item>
+          <widget class="QLabel" name="willLabel">
+           <property name="text">
+            <string>Will</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QSpinBox" name="willSpinBox">
+           <property name="minimumSize">
+            <size>
+             <width>60</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="minimum">
+            <number>-20</number>
+           </property>
+           <property name="maximum">
+            <number>20</number>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item row="2" column="2">
+        <layout class="QHBoxLayout" name="reflexLayout">
+         <item>
+          <widget class="QLabel" name="reflexLabel">
+           <property name="text">
+            <string>Reflex</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QSpinBox" name="reflexSpinBox">
+           <property name="minimumSize">
+            <size>
+             <width>60</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="minimum">
+            <number>-20</number>
+           </property>
+           <property name="maximum">
+            <number>20</number>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item row="2" column="3">
+        <layout class="QHBoxLayout" name="fortitudeLayout">
+         <item>
+          <widget class="QLabel" name="fortitudeLabel">
+           <property name="text">
+            <string>Konst</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QSpinBox" name="fortitudeSpinBox">
+           <property name="minimumSize">
+            <size>
+             <width>60</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="minimum">
+            <number>-20</number>
+           </property>
+           <property name="maximum">
+            <number>20</number>
+           </property>
+          </widget>
+         </item>
+        </layout>
        </item>
       </layout>
      </widget>

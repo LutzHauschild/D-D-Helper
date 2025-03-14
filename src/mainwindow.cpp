@@ -13,6 +13,11 @@
 #include <QBrush>
 #include <QFont>
 
+// Füge die Namespace-Deklaration für die UI-Klasse hinzu
+namespace Ui {
+    class MainWindow;
+}
+
 /**
  * @brief Konstruktor für das Hauptfenster
  * 
@@ -41,7 +46,6 @@ MainWindow::MainWindow(QWidget *parent)
             << "Willenskraft" << "Reflex" << "Konstitution" 
             << "Will würfeln" << "Reflex würfeln" << "Konst. würfeln";
     m_model->setHorizontalHeaderLabels(headers);
-    
     // Konfiguriere die TableView
     ui->characterTableView->setModel(m_proxyModel);
     ui->characterTableView->setSortingEnabled(true);
@@ -280,9 +284,28 @@ void MainWindow::onCharactersChanged()
 
 void MainWindow::onInitiativeRolled()
 {
-    // Aktualisiere die Tabelle und sortiere nach Initiative
+    // Aktualisiere die Tabelle
     updateTable();
+    
+    // Sortiere nach Initiative
     ui->characterTableView->sortByColumn(TOTAL_INITIATIVE_COLUMN, Qt::DescendingOrder);
+    
+    // Aktualisiere die Buttons nach dem Sortieren
+    QVector<Character> characters = m_initiativeTracker.getCharacters();
+    for (int i = 0; i < characters.size(); ++i) {
+        const Character &character = characters[i];
+        
+        // Finde die tatsächliche Zeile nach dem Sortieren
+        QModelIndex sourceIndex = m_model->index(i, 0);
+        QModelIndex proxyIndex = m_proxyModel->mapFromSource(sourceIndex);
+        int visualRow = proxyIndex.row();
+        
+        // Erstelle die Buttons für die Würfelwürfe
+        createRollButton(visualRow, ROLL_INITIATIVE_COLUMN, "d20", character.getInitiativeModifier(), "Würfeln");
+        createRollButton(visualRow, ROLL_WILL_COLUMN, "will", character.getWillSave(), "Würfeln");
+        createRollButton(visualRow, ROLL_REFLEX_COLUMN, "reflex", character.getReflexSave(), "Würfeln");
+        createRollButton(visualRow, ROLL_FORTITUDE_COLUMN, "fortitude", character.getFortitudeSave(), "Würfeln");
+    }
 }
 
 void MainWindow::onSavesRolled()
@@ -293,6 +316,9 @@ void MainWindow::onSavesRolled()
 
 void MainWindow::updateTable()
 {
+    // Speichere den aktuell ausgewählten Index
+    QModelIndex currentIndex = ui->characterTableView->currentIndex();
+    
     // Lösche alle Zeilen im Modell
     m_model->removeRows(0, m_model->rowCount());
     
@@ -318,11 +344,20 @@ void MainWindow::updateTable()
         rowItems.append(initiativeModItem);
         
         // Initiative Würfel
-        QStandardItem *initiativeRollItem = new QStandardItem(QString::number(character.getInitiativeRoll()));
+        QStandardItem *initiativeRollItem = new QStandardItem();
+        if (character.getInitiativeRoll() > 0) {
+            initiativeRollItem->setText(QString::number(character.getInitiativeRoll()));
+        }
         rowItems.append(initiativeRollItem);
         
         // Gesamt-Initiative
-        QStandardItem *totalInitiativeItem = new QStandardItem(QString::number(character.getTotalInitiative()));
+        QStandardItem *totalInitiativeItem = new QStandardItem();
+        if (character.getInitiativeRoll() > 0) {
+            totalInitiativeItem->setText(QString("%1 (%2)").arg(character.getInitiativeModifier())
+                                        .arg(character.getTotalInitiative()));
+        } else {
+            totalInitiativeItem->setText(QString::number(character.getInitiativeModifier()));
+        }
         QFont totalFont = totalInitiativeItem->font();
         totalFont.setBold(true);
         totalInitiativeItem->setFont(totalFont);
@@ -336,26 +371,35 @@ void MainWindow::updateTable()
         rowItems.append(rollInitiativeItem);
         
         // Willenskraft
-        QStandardItem *willSaveItem = new QStandardItem(QString::number(character.getWillSave()));
+        QStandardItem *willSaveItem = new QStandardItem();
         if (character.getLastWillSaveRoll() > 0) {
             willSaveItem->setText(QString("%1 (%2)").arg(character.getWillSave())
                                  .arg(character.getLastWillSaveRoll() + character.getWillSave()));
+            willSaveItem->setForeground(QBrush(QColor(0, 100, 0))); // Dunkelgrün
+        } else {
+            willSaveItem->setText(QString::number(character.getWillSave()));
         }
         rowItems.append(willSaveItem);
         
         // Reflex
-        QStandardItem *reflexSaveItem = new QStandardItem(QString::number(character.getReflexSave()));
+        QStandardItem *reflexSaveItem = new QStandardItem();
         if (character.getLastReflexSaveRoll() > 0) {
             reflexSaveItem->setText(QString("%1 (%2)").arg(character.getReflexSave())
                                    .arg(character.getLastReflexSaveRoll() + character.getReflexSave()));
+            reflexSaveItem->setForeground(QBrush(QColor(0, 100, 0))); // Dunkelgrün
+        } else {
+            reflexSaveItem->setText(QString::number(character.getReflexSave()));
         }
         rowItems.append(reflexSaveItem);
         
         // Konstitution
-        QStandardItem *fortitudeSaveItem = new QStandardItem(QString::number(character.getFortitudeSave()));
+        QStandardItem *fortitudeSaveItem = new QStandardItem();
         if (character.getLastFortitudeSaveRoll() > 0) {
             fortitudeSaveItem->setText(QString("%1 (%2)").arg(character.getFortitudeSave())
                                       .arg(character.getLastFortitudeSaveRoll() + character.getFortitudeSave()));
+            fortitudeSaveItem->setForeground(QBrush(QColor(0, 100, 0))); // Dunkelgrün
+        } else {
+            fortitudeSaveItem->setText(QString::number(character.getFortitudeSave()));
         }
         rowItems.append(fortitudeSaveItem);
         
@@ -373,12 +417,22 @@ void MainWindow::updateTable()
         
         // Füge die Zeile zum Modell hinzu
         m_model->appendRow(rowItems);
+    }
+    
+    // Erstelle die Buttons für alle Zeilen
+    for (int i = 0; i < characters.size(); ++i) {
+        const Character &character = characters[i];
         
         // Erstelle die Buttons für die Würfelwürfe
         createRollButton(i, ROLL_INITIATIVE_COLUMN, "d20", character.getInitiativeModifier(), "Würfeln");
         createRollButton(i, ROLL_WILL_COLUMN, "will", character.getWillSave(), "Würfeln");
         createRollButton(i, ROLL_REFLEX_COLUMN, "reflex", character.getReflexSave(), "Würfeln");
         createRollButton(i, ROLL_FORTITUDE_COLUMN, "fortitude", character.getFortitudeSave(), "Würfeln");
+    }
+    
+    // Stelle die Auswahl wieder her, falls möglich
+    if (currentIndex.isValid() && currentIndex.row() < characters.size()) {
+        ui->characterTableView->setCurrentIndex(currentIndex);
     }
 }
 
@@ -395,7 +449,10 @@ void MainWindow::createRollButton(int row, int column, const QString &diceType, 
     connect(button, &QPushButton::clicked, this, &MainWindow::onRollDiceButtonClicked);
     
     // Setze den Button in die Tabelle
-    ui->characterTableView->setIndexWidget(m_proxyModel->index(row, column), button);
+    QModelIndex index = m_proxyModel->index(row, column);
+    if (index.isValid()) {
+        ui->characterTableView->setIndexWidget(index, button);
+    }
 }
 
 void MainWindow::onRollDiceButtonClicked()
