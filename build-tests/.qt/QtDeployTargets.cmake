@@ -1,6 +1,0 @@
-set(__QT_DEPLOY_TARGET_tst_character_FILE /Users/modemuser/D&D-Helper/build-tests/tests/tst_character)
-set(__QT_DEPLOY_TARGET_tst_character_TYPE EXECUTABLE)
-set(__QT_DEPLOY_TARGET_tst_initiativetracker_FILE /Users/modemuser/D&D-Helper/build-tests/tests/tst_initiativetracker)
-set(__QT_DEPLOY_TARGET_tst_initiativetracker_TYPE EXECUTABLE)
-set(__QT_DEPLOY_TARGET_DnDInitiativeTracker_FILE /Users/modemuser/D&D-Helper/build-tests/DnDInitiativeTracker)
-set(__QT_DEPLOY_TARGET_DnDInitiativeTracker_TYPE EXECUTABLE)
