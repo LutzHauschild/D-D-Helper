@@ -1,5 +1,0 @@
-/Users/modemuser/D&D-Helper/build/CMakeFiles/DnDInitiativeTracker.dir
-/Users/modemuser/D&D-Helper/build/CMakeFiles/edit_cache.dir
-/Users/modemuser/D&D-Helper/build/CMakeFiles/rebuild_cache.dir
-/Users/modemuser/D&D-Helper/build/CMakeFiles/DnDInitiativeTracker_autogen_timestamp_deps.dir
-/Users/modemuser/D&D-Helper/build/CMakeFiles/DnDInitiativeTracker_autogen.dir

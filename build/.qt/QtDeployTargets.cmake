@@ -1,2 +1,0 @@
-set(__QT_DEPLOY_TARGET_DnDInitiativeTracker_FILE /Users/modemuser/D&D-Helper/build/DnDInitiativeTracker)
-set(__QT_DEPLOY_TARGET_DnDInitiativeTracker_TYPE EXECUTABLE)
