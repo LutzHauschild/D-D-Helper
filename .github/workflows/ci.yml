@@ -38,20 +38,21 @@ jobs:
         version: ${{ matrix.qt-version }}
         archives: 'qtbase qttools'
 
-    - name: Create Build Environment
-      run: cmake -E make_directory ${{github.workspace}}/build
-
-    - name: Clean Build Directory
+    - name: Create and Clean Build Directory
       shell: bash
       run: |
+        mkdir -p ${{github.workspace}}/build
         rm -rf ${{github.workspace}}/build/*
-        git clean -fdx ${{github.workspace}}/build
 
     - name: Configure CMake (Unix)
       if: runner.os != 'Windows'
       shell: bash
       working-directory: ${{github.workspace}}/build
-      run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=Release
+      run: |
+        echo "Current directory: $(pwd)"
+        echo "Workspace directory: $GITHUB_WORKSPACE"
+        ls -la $GITHUB_WORKSPACE
+        cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=Release
 
     - name: Configure CMake (Windows)
       if: runner.os == 'Windows'
