@@ -31,13 +31,26 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install -y libgl1-mesa-dev libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-render-util0 libxcb-xinerama0 libxcb-xkb1 xvfb
-        sudo apt-get install -y libicu-dev libicu70 libicu-dev
+        sudo apt-get install -y libicu-dev
 
     - name: Install Qt
       uses: jurplel/install-qt-action@v3
       with:
         version: ${{ matrix.qt-version }}
         archives: 'qtbase qttools'
+
+    - name: Fix ICU Libraries (Linux)
+      if: runner.os == 'Linux'
+      shell: bash
+      run: |
+        echo "Checking for ICU libraries..."
+        find /usr/lib -name "libicu*.so*" | sort
+        
+        sudo ln -sf /usr/lib/x86_64-linux-gnu/libicui18n.so /usr/lib/libicui18n.so.56
+        sudo ln -sf /usr/lib/x86_64-linux-gnu/libicuuc.so /usr/lib/libicuuc.so.56
+        sudo ln -sf /usr/lib/x86_64-linux-gnu/libicudata.so /usr/lib/libicudata.so.56
+        
+        ls -la /usr/lib/libicu*.so*
 
     - name: Debug Qt Installation (Linux)
       if: runner.os == 'Linux'
@@ -47,6 +60,8 @@ jobs:
         ls -la "$Qt6_DIR"
         echo "Qt lib directory:"
         ls -la "$Qt6_DIR/lib"
+        echo "Qt libexec directory:"
+        ls -la "$Qt6_DIR/libexec"
         echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
         echo "Setting LD_LIBRARY_PATH to include Qt libraries"
         export LD_LIBRARY_PATH="$Qt6_DIR/lib:$LD_LIBRARY_PATH"
@@ -84,7 +99,7 @@ jobs:
       working-directory: ${{github.workspace}}/build
       shell: bash
       run: |
-        export LD_LIBRARY_PATH="$Qt6_DIR/lib:$LD_LIBRARY_PATH"
+        export LD_LIBRARY_PATH="$Qt6_DIR/lib:/usr/lib:$LD_LIBRARY_PATH"
         cmake --build . --config Release
 
     - name: Build (Windows)
@@ -98,7 +113,7 @@ jobs:
       working-directory: ${{github.workspace}}/build
       shell: bash
       run: |
-        export LD_LIBRARY_PATH="$Qt6_DIR/lib:$LD_LIBRARY_PATH"
+        export LD_LIBRARY_PATH="$Qt6_DIR/lib:/usr/lib:$LD_LIBRARY_PATH"
         xvfb-run -a ctest -C Release --output-on-failure
 
     - name: Test (macOS)
