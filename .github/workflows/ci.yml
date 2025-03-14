@@ -41,8 +41,8 @@ jobs:
     - name: Create and Clean Build Directory
       shell: bash
       run: |
-        mkdir -p ${{github.workspace}}/build
-        rm -rf ${{github.workspace}}/build/*
+        mkdir -p "${{github.workspace}}/build"
+        rm -rf "${{github.workspace}}/build/"*
 
     - name: Configure CMake (Unix)
       if: runner.os != 'Windows'
@@ -51,18 +51,29 @@ jobs:
       run: |
         echo "Current directory: $(pwd)"
         echo "Workspace directory: $GITHUB_WORKSPACE"
-        ls -la $GITHUB_WORKSPACE
-        cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=Release
+        ls -la "$GITHUB_WORKSPACE"
+        cmake "$GITHUB_WORKSPACE" -DCMAKE_BUILD_TYPE=Release
 
     - name: Configure CMake (Windows)
       if: runner.os == 'Windows'
-      shell: bash
-      working-directory: ${{github.workspace}}/build
-      run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=Release
+      shell: cmd
+      working-directory: ${{github.workspace}}\build
+      run: |
+        echo "Current directory: %CD%"
+        echo "Workspace directory: %GITHUB_WORKSPACE%"
+        dir "%GITHUB_WORKSPACE%"
+        cmake "%GITHUB_WORKSPACE%" -DCMAKE_BUILD_TYPE=Release
 
-    - name: Build
+    - name: Build (Unix)
+      if: runner.os != 'Windows'
       working-directory: ${{github.workspace}}/build
       shell: bash
+      run: cmake --build . --config Release
+
+    - name: Build (Windows)
+      if: runner.os == 'Windows'
+      working-directory: ${{github.workspace}}\build
+      shell: cmd
       run: cmake --build . --config Release
 
     - name: Test (Linux)
@@ -72,8 +83,14 @@ jobs:
       run: |
         xvfb-run -a ctest -C Release --output-on-failure
 
-    - name: Test (macOS/Windows)
-      if: runner.os != 'Linux'
+    - name: Test (macOS)
+      if: runner.os == 'macOS'
       working-directory: ${{github.workspace}}/build
       shell: bash
+      run: ctest -C Release --output-on-failure
+
+    - name: Test (Windows)
+      if: runner.os == 'Windows'
+      working-directory: ${{github.workspace}}\build
+      shell: cmd
       run: ctest -C Release --output-on-failure 
