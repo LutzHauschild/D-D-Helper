@@ -84,6 +84,14 @@ public:
     QVector<Character> getCharacters() const;
     
     /**
+     * @brief Aktualisiert einen Charakter in der Liste.
+     * 
+     * @param index Der Index des zu aktualisierenden Charakters
+     * @param character Der aktualisierte Charakter
+     */
+    void updateCharacter(int index, const Character &character);
+    
+    /**
      * @brief Würfelt die Initiative für alle Charaktere in der Liste.
      * 
      * Qt-Konzept: Iteration über Container
@@ -91,6 +99,13 @@ public:
      * In der Implementierung wird eine for-Schleife oder ein Iterator verwendet.
      */
     void rollAllInitiatives();
+    
+    /**
+     * @brief Würfelt die Initiative für einen einzelnen Charakter.
+     * 
+     * @param index Der Index des Charakters
+     */
+    void rollInitiativeForCharacter(int index);
     
     /**
      * @brief Gibt eine nach Initiative sortierte Charakterliste zurück.
@@ -132,6 +147,51 @@ public:
      */
     bool loadFromFile(const QString &filename = "characters.json");
     
+    /**
+     * @brief Würfelt Willenskraft-Rettungswürfe für alle Charaktere.
+     * 
+     * Ruft für jeden Charakter die rollWillSave()-Methode auf und
+     * sendet das Signal savesRolled() nach dem Würfeln.
+     */
+    void rollAllWillSaves();
+    
+    /**
+     * @brief Würfelt einen Willenskraft-Rettungswurf für einen einzelnen Charakter.
+     * 
+     * @param index Der Index des Charakters
+     */
+    void rollWillSaveForCharacter(int index);
+    
+    /**
+     * @brief Würfelt Reflex-Rettungswürfe für alle Charaktere.
+     * 
+     * Ruft für jeden Charakter die rollReflexSave()-Methode auf und
+     * sendet das Signal savesRolled() nach dem Würfeln.
+     */
+    void rollAllReflexSaves();
+    
+    /**
+     * @brief Würfelt einen Reflex-Rettungswurf für einen einzelnen Charakter.
+     * 
+     * @param index Der Index des Charakters
+     */
+    void rollReflexSaveForCharacter(int index);
+    
+    /**
+     * @brief Würfelt Konstitution-Rettungswürfe für alle Charaktere.
+     * 
+     * Ruft für jeden Charakter die rollFortitudeSave()-Methode auf und
+     * sendet das Signal savesRolled() nach dem Würfeln.
+     */
+    void rollAllFortitudeSaves();
+    
+    /**
+     * @brief Würfelt einen Konstitution-Rettungswurf für einen einzelnen Charakter.
+     * 
+     * @param index Der Index des Charakters
+     */
+    void rollFortitudeSaveForCharacter(int index);
+    
 signals:
     /**
      * @brief Signal, das gesendet wird, wenn sich die Charakterliste ändert.
@@ -152,6 +212,14 @@ signals:
      * senden sollen, ohne zusätzliche Daten zu übermitteln.
      */
     void initiativeRolled();
+    
+    /**
+     * @brief Signal, das gesendet wird, wenn Rettungswürfe gewürfelt wurden.
+     * 
+     * Wird nach dem Aufruf von rollAllWillSaves(), rollAllReflexSaves() oder
+     * rollAllFortitudeSaves() gesendet.
+     */
+    void savesRolled();
     
 private:
     /**

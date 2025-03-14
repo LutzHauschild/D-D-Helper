@@ -4,6 +4,14 @@
 #include <QDebug>
 #include <QDesktopServices>
 #include <QPushButton>
+#include <QStandardItemModel>
+#include <QSortFilterProxyModel>
+#include <QHeaderView>
+#include <QFileDialog>
+#include <QCloseEvent>
+#include <QColor>
+#include <QBrush>
+#include <QFont>
 
 /**
  * @brief Konstruktor für das Hauptfenster
@@ -22,21 +30,40 @@ MainWindow::MainWindow(QWidget *parent)
     // Lädt und initialisiert die UI aus der .ui-Datei
     ui->setupUi(this);
     
-    // Verbindungen zwischen den Signalen des InitiativeTrackers und den Slots des Hauptfensters herstellen
-    connect(&m_initiativeTracker, &InitiativeTracker::charactersChanged, this, &MainWindow::updateCharacterTable);
-    connect(&m_initiativeTracker, &InitiativeTracker::initiativeRolled, this, &MainWindow::updateCharacterTable);
+    // Erstelle das Datenmodell für die Tabelle
+    m_model = new QStandardItemModel(this);
+    m_proxyModel = new QSortFilterProxyModel(this);
+    m_proxyModel->setSourceModel(m_model);
     
-    // Tabelle konfigurieren
-    ui->characterTableWidget->setSelectionBehavior(QAbstractItemView::SelectRows);  // Ganze Zeilen auswählen
-    ui->characterTableWidget->setEditTriggers(QAbstractItemView::NoEditTriggers);   // Bearbeitung in der Tabelle deaktivieren
-    ui->characterTableWidget->horizontalHeader()->setStretchLastSection(true);      // Letzte Spalte dehnen
-    ui->characterTableWidget->verticalHeader()->setVisible(false);                  // Zeilennummern ausblenden
+    // Setze die Spaltenüberschriften
+    QStringList headers;
+    headers << "Name" << "Initiative Mod" << "Würfel" << "Gesamt" << "Würfeln"
+            << "Willenskraft" << "Reflex" << "Konstitution" 
+            << "Will würfeln" << "Reflex würfeln" << "Konst. würfeln";
+    m_model->setHorizontalHeaderLabels(headers);
     
-    // Gespeicherte Charaktere laden
-    loadCharacters();
+    // Konfiguriere die TableView
+    ui->characterTableView->setModel(m_proxyModel);
+    ui->characterTableView->setSortingEnabled(true);
+    ui->characterTableView->setSelectionBehavior(QAbstractItemView::SelectRows);
+    ui->characterTableView->setSelectionMode(QAbstractItemView::SingleSelection);
+    ui->characterTableView->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    ui->characterTableView->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+    ui->characterTableView->horizontalHeader()->setStretchLastSection(true);
+    ui->characterTableView->setAlternatingRowColors(true);
     
-    // Anfangszustand der Tabelle aktualisieren
-    updateCharacterTable();
+    // Verbinde Signale und Slots
+    connect(&m_initiativeTracker, &InitiativeTracker::charactersChanged, this, &MainWindow::onCharactersChanged);
+    connect(&m_initiativeTracker, &InitiativeTracker::initiativeRolled, this, &MainWindow::onInitiativeRolled);
+    connect(&m_initiativeTracker, &InitiativeTracker::savesRolled, this, &MainWindow::onSavesRolled);
+    
+    // Lade gespeicherte Charaktere, falls vorhanden
+    if (m_initiativeTracker.loadFromFile()) {
+        qDebug() << "Charakterdaten erfolgreich geladen.";
+    }
+    
+    // Aktualisiere die Tabelle
+    updateTable();
 }
 
 /**
@@ -46,6 +73,11 @@ MainWindow::MainWindow(QWidget *parent)
  */
 MainWindow::~MainWindow()
 {
+    // Speichere die Charaktere beim Beenden
+    if (m_initiativeTracker.saveToFile()) {
+        qDebug() << "Charakterdaten erfolgreich gespeichert.";
+    }
+    
     delete ui;
 }
 
@@ -103,28 +135,6 @@ void MainWindow::saveCharacters()
 }
 
 /**
- * @brief Öffnet die TaleSpire-URL mit dem angegebenen Modifikator
- * 
- * Erstellt eine URL im Format "talespire://dice/attack:d20+<modifikator>"
- * und öffnet sie im Standardbrowser oder der TaleSpire-Anwendung.
- * 
- * @param modifier Der Initiative-Modifikator, der in die URL eingefügt wird
- */
-void MainWindow::openTaleSpireUrl(int modifier)
-{
-    // Erstellt die TaleSpire-URL mit dem angegebenen Modifikator
-    QString urlString = QString("talespire://dice/attack:d20+%1").arg(modifier);
-    QUrl url(urlString);
-    
-    // Öffnet die URL im Standardbrowser oder der TaleSpire-Anwendung
-    bool success = QDesktopServices::openUrl(url);
-    
-    if (!success) {
-        QMessageBox::warning(this, tr("Fehler"), tr("Die TaleSpire-URL konnte nicht geöffnet werden. Stellen Sie sicher, dass TaleSpire installiert ist."));
-    }
-}
-
-/**
  * @brief Slot, der aufgerufen wird, wenn der "Hinzufügen"-Button geklickt wird
  * 
  * Liest die Eingabefelder aus, überprüft, ob ein Name eingegeben wurde,
@@ -132,46 +142,57 @@ void MainWindow::openTaleSpireUrl(int modifier)
  */
 void MainWindow::on_addButton_clicked()
 {
-    // Eingabefelder auslesen
-    QString name = ui->nameEdit->text().trimmed();  // Leerzeichen am Anfang und Ende entfernen
-    int initiativeModifier = ui->initiativeModSpinBox->value();
+    // Hole die Werte aus den Eingabefeldern
+    QString name = ui->nameLineEdit->text().trimmed();
+    int initiativeModifier = ui->initiativeSpinBox->value();
+    int willSave = ui->willSpinBox->value();
+    int reflexSave = ui->reflexSpinBox->value();
+    int fortitudeSave = ui->fortitudeSpinBox->value();
     
-    // Überprüfen, ob ein Name eingegeben wurde
+    // Überprüfe, ob ein Name eingegeben wurde
     if (name.isEmpty()) {
-        QMessageBox::warning(this, tr("Fehler"), tr("Bitte geben Sie einen Namen ein."));
+        QMessageBox::warning(this, "Fehler", "Bitte geben Sie einen Namen ein.");
         return;
     }
     
-    // Neuen Charakter erstellen und zum InitiativeTracker hinzufügen
-    Character character(name, initiativeModifier);
+    // Erstelle einen neuen Charakter und füge ihn hinzu
+    Character character(name, initiativeModifier, willSave, reflexSave, fortitudeSave);
     m_initiativeTracker.addCharacter(character);
     
-    // Eingabefelder zurücksetzen
-    ui->nameEdit->clear();
-    ui->initiativeModSpinBox->setValue(0);
-    ui->nameEdit->setFocus();  // Fokus zurück auf das Namensfeld setzen
+    // Leere die Eingabefelder
+    ui->nameLineEdit->clear();
+    ui->initiativeSpinBox->setValue(0);
+    ui->willSpinBox->setValue(0);
+    ui->reflexSpinBox->setValue(0);
+    ui->fortitudeSpinBox->setValue(0);
+    ui->nameLineEdit->setFocus();
 }
 
 /**
- * @brief Slot, der aufgerufen wird, wenn der "Initiative würfeln"-Button geklickt wird
+ * @brief Slot, der aufgerufen wird, wenn der "Entfernen"-Button geklickt wird
  * 
- * Überprüft, ob Charaktere vorhanden sind, und würfelt dann die Initiative
- * für alle Charaktere im InitiativeTracker.
+ * Überprüft, ob eine Zeile ausgewählt ist, und entfernt dann den entsprechenden
+ * Charakter aus dem InitiativeTracker.
  */
-void MainWindow::on_rollButton_clicked()
+void MainWindow::on_removeButton_clicked()
 {
-    // Überprüfen, ob Charaktere vorhanden sind
-    if (m_initiativeTracker.getCharacters().isEmpty()) {
-        QMessageBox::information(this, tr("Information"), tr("Fügen Sie zuerst Charaktere hinzu."));
+    // Hole den ausgewählten Index
+    QModelIndex proxyIndex = ui->characterTableView->currentIndex();
+    if (!proxyIndex.isValid()) {
+        QMessageBox::warning(this, "Fehler", "Bitte wählen Sie einen Charakter aus.");
         return;
     }
     
-    // Initiative für alle Charaktere würfeln
-    m_initiativeTracker.rollAllInitiatives();
+    // Konvertiere den Proxy-Index in den Quellindex
+    QModelIndex sourceIndex = m_proxyModel->mapToSource(proxyIndex);
+    int row = sourceIndex.row();
+    
+    // Entferne den Charakter
+    m_initiativeTracker.removeCharacter(row);
 }
 
 /**
- * @brief Slot, der aufgerufen wird, wenn der "Liste leeren"-Button geklickt wird
+ * @brief Slot, der aufgerufen wird, wenn der "Alle löschen"-Button geklickt wird
  * 
  * Überprüft, ob Charaktere vorhanden sind, fragt den Benutzer nach Bestätigung
  * und entfernt dann alle Charaktere aus dem InitiativeTracker.
@@ -184,8 +205,8 @@ void MainWindow::on_clearButton_clicked()
     }
     
     // Benutzer nach Bestätigung fragen
-    QMessageBox::StandardButton reply = QMessageBox::question(this, tr("Bestätigung"),
-                                                             tr("Möchten Sie wirklich alle Charaktere entfernen?"),
+    QMessageBox::StandardButton reply = QMessageBox::question(this, "Bestätigung",
+                                                             "Möchten Sie wirklich alle Charaktere entfernen?",
                                                              QMessageBox::Yes | QMessageBox::No);
     if (reply == QMessageBox::Yes) {
         // Alle Charaktere entfernen
@@ -194,65 +215,235 @@ void MainWindow::on_clearButton_clicked()
 }
 
 /**
- * @brief Slot, der aufgerufen wird, wenn der "Ausgewählten entfernen"-Button geklickt wird
+ * @brief Slot, der aufgerufen wird, wenn der "Initiative würfeln"-Button geklickt wird
  * 
- * Überprüft, ob eine Zeile ausgewählt ist, und entfernt dann den entsprechenden
- * Charakter aus dem InitiativeTracker.
+ * Überprüft, ob Charaktere vorhanden sind, und würfelt dann die Initiative
+ * für alle Charaktere im InitiativeTracker.
  */
-void MainWindow::on_removeButton_clicked()
+void MainWindow::on_rollInitiativeButton_clicked()
 {
-    // Ausgewählte Zeile ermitteln
-    int currentRow = ui->characterTableWidget->currentRow();
-    if (currentRow >= 0) {
-        // Charakter an der ausgewählten Position entfernen
-        m_initiativeTracker.removeCharacter(currentRow);
-    } else {
-        // Fehlermeldung anzeigen, wenn keine Zeile ausgewählt ist
-        QMessageBox::information(this, tr("Information"), tr("Bitte wählen Sie einen Charakter aus."));
+    // Überprüfen, ob Charaktere vorhanden sind
+    if (m_initiativeTracker.getCharacters().isEmpty()) {
+        QMessageBox::information(this, "Information", "Fügen Sie zuerst Charaktere hinzu.");
+        return;
+    }
+    
+    // Initiative für alle Charaktere würfeln
+    m_initiativeTracker.rollAllInitiatives();
+}
+
+/**
+ * @brief Slot, der aufgerufen wird, wenn der "Speichern"-Button geklickt wird
+ * 
+ * Öffnet einen Datei-Dialog zum Speichern der Charakterdaten.
+ */
+void MainWindow::on_saveButton_clicked()
+{
+    // Öffne einen Datei-Dialog zum Speichern
+    QString filename = QFileDialog::getSaveFileName(
+        this, "Charaktere speichern", "", "JSON-Dateien (*.json);;Alle Dateien (*)");
+    
+    if (!filename.isEmpty()) {
+        if (m_initiativeTracker.saveToFile(filename)) {
+            QMessageBox::information(this, "Erfolg", "Charaktere erfolgreich gespeichert.");
+        } else {
+            QMessageBox::warning(this, "Fehler", "Fehler beim Speichern der Charaktere.");
+        }
     }
 }
 
 /**
- * @brief Aktualisiert die Charaktertabelle mit den aktuellen Daten aus dem InitiativeTracker
+ * @brief Slot, der aufgerufen wird, wenn der "Laden"-Button geklickt wird
  * 
- * Leert die Tabelle und füllt sie mit den nach Initiative sortierten Charakteren
- * aus dem InitiativeTracker. Wird aufgerufen, wenn sich die Charakterliste ändert
- * oder die Initiative gewürfelt wurde.
+ * Öffnet einen Datei-Dialog zum Laden der Charakterdaten.
  */
-void MainWindow::updateCharacterTable()
+void MainWindow::on_loadButton_clicked()
 {
-    // Tabelle leeren
-    ui->characterTableWidget->setRowCount(0);
+    // Öffne einen Datei-Dialog zum Laden
+    QString filename = QFileDialog::getOpenFileName(
+        this, "Charaktere laden", "", "JSON-Dateien (*.json);;Alle Dateien (*)");
     
-    // Sortierte Charakterliste abrufen
-    QVector<Character> sortedCharacters = m_initiativeTracker.getSortedInitiativeOrder();
-    
-    // Tabelle mit den sortierten Charakteren füllen
-    for (const auto &character : sortedCharacters) {
-        int row = ui->characterTableWidget->rowCount();
-        ui->characterTableWidget->insertRow(row);
-        
-        // Charakterdaten in die Tabelle eintragen
-        ui->characterTableWidget->setItem(row, 0, new QTableWidgetItem(character.getName()));
-        ui->characterTableWidget->setItem(row, 1, new QTableWidgetItem(QString::number(character.getInitiativeModifier())));
-        ui->characterTableWidget->setItem(row, 2, new QTableWidgetItem(QString::number(character.getInitiativeRoll())));
-        ui->characterTableWidget->setItem(row, 3, new QTableWidgetItem(QString::number(character.getTotalInitiative())));
-        
-        // TaleSpire-Knopf erstellen und konfigurieren
-        QPushButton *taleSpireButton = new QPushButton(tr("Würfeln in Talespire"));
-        
-        // Modifikator für den Knopf speichern
-        int modifier = character.getInitiativeModifier();
-        
-        // Verbindung zum Slot herstellen (mit Lambda-Funktion, um den Modifikator zu übergeben)
-        connect(taleSpireButton, &QPushButton::clicked, this, [this, modifier]() {
-            this->openTaleSpireUrl(modifier);
-        });
-        
-        // Knopf in die Tabelle einfügen
-        ui->characterTableWidget->setCellWidget(row, 4, taleSpireButton);
+    if (!filename.isEmpty()) {
+        if (m_initiativeTracker.loadFromFile(filename)) {
+            QMessageBox::information(this, "Erfolg", "Charaktere erfolgreich geladen.");
+        } else {
+            QMessageBox::warning(this, "Fehler", "Fehler beim Laden der Charaktere.");
+        }
     }
+}
+
+void MainWindow::onCharactersChanged()
+{
+    // Aktualisiere die Tabelle, wenn sich die Charakterliste ändert
+    updateTable();
+}
+
+void MainWindow::onInitiativeRolled()
+{
+    // Aktualisiere die Tabelle und sortiere nach Initiative
+    updateTable();
+    ui->characterTableView->sortByColumn(TOTAL_INITIATIVE_COLUMN, Qt::DescendingOrder);
+}
+
+void MainWindow::onSavesRolled()
+{
+    // Aktualisiere die Tabelle, wenn Rettungswürfe gewürfelt wurden
+    updateTable();
+}
+
+void MainWindow::updateTable()
+{
+    // Lösche alle Zeilen im Modell
+    m_model->removeRows(0, m_model->rowCount());
     
-    // Spaltenbreiten an den Inhalt anpassen
-    ui->characterTableWidget->resizeColumnsToContents();
+    // Hole die Charakterliste
+    QVector<Character> characters = m_initiativeTracker.getCharacters();
+    
+    // Füge jeden Charakter zur Tabelle hinzu
+    for (int i = 0; i < characters.size(); ++i) {
+        const Character &character = characters[i];
+        
+        // Erstelle die Items für die Zeile
+        QList<QStandardItem*> rowItems;
+        
+        // Name
+        QStandardItem *nameItem = new QStandardItem(character.getName());
+        QFont boldFont = nameItem->font();
+        boldFont.setBold(true);
+        nameItem->setFont(boldFont);
+        rowItems.append(nameItem);
+        
+        // Initiative Modifier
+        QStandardItem *initiativeModItem = new QStandardItem(QString::number(character.getInitiativeModifier()));
+        rowItems.append(initiativeModItem);
+        
+        // Initiative Würfel
+        QStandardItem *initiativeRollItem = new QStandardItem(QString::number(character.getInitiativeRoll()));
+        rowItems.append(initiativeRollItem);
+        
+        // Gesamt-Initiative
+        QStandardItem *totalInitiativeItem = new QStandardItem(QString::number(character.getTotalInitiative()));
+        QFont totalFont = totalInitiativeItem->font();
+        totalFont.setBold(true);
+        totalInitiativeItem->setFont(totalFont);
+        if (character.getTotalInitiative() > 0) {
+            totalInitiativeItem->setForeground(QBrush(QColor(0, 100, 0))); // Dunkelgrün
+        }
+        rowItems.append(totalInitiativeItem);
+        
+        // Initiative würfeln (leere Zelle für den Button)
+        QStandardItem *rollInitiativeItem = new QStandardItem();
+        rowItems.append(rollInitiativeItem);
+        
+        // Willenskraft
+        QStandardItem *willSaveItem = new QStandardItem(QString::number(character.getWillSave()));
+        if (character.getLastWillSaveRoll() > 0) {
+            willSaveItem->setText(QString("%1 (%2)").arg(character.getWillSave())
+                                 .arg(character.getLastWillSaveRoll() + character.getWillSave()));
+        }
+        rowItems.append(willSaveItem);
+        
+        // Reflex
+        QStandardItem *reflexSaveItem = new QStandardItem(QString::number(character.getReflexSave()));
+        if (character.getLastReflexSaveRoll() > 0) {
+            reflexSaveItem->setText(QString("%1 (%2)").arg(character.getReflexSave())
+                                   .arg(character.getLastReflexSaveRoll() + character.getReflexSave()));
+        }
+        rowItems.append(reflexSaveItem);
+        
+        // Konstitution
+        QStandardItem *fortitudeSaveItem = new QStandardItem(QString::number(character.getFortitudeSave()));
+        if (character.getLastFortitudeSaveRoll() > 0) {
+            fortitudeSaveItem->setText(QString("%1 (%2)").arg(character.getFortitudeSave())
+                                      .arg(character.getLastFortitudeSaveRoll() + character.getFortitudeSave()));
+        }
+        rowItems.append(fortitudeSaveItem);
+        
+        // Willenskraft würfeln (leere Zelle für den Button)
+        QStandardItem *rollWillItem = new QStandardItem();
+        rowItems.append(rollWillItem);
+        
+        // Reflex würfeln (leere Zelle für den Button)
+        QStandardItem *rollReflexItem = new QStandardItem();
+        rowItems.append(rollReflexItem);
+        
+        // Konstitution würfeln (leere Zelle für den Button)
+        QStandardItem *rollFortitudeItem = new QStandardItem();
+        rowItems.append(rollFortitudeItem);
+        
+        // Füge die Zeile zum Modell hinzu
+        m_model->appendRow(rowItems);
+        
+        // Erstelle die Buttons für die Würfelwürfe
+        createRollButton(i, ROLL_INITIATIVE_COLUMN, "d20", character.getInitiativeModifier(), "Würfeln");
+        createRollButton(i, ROLL_WILL_COLUMN, "will", character.getWillSave(), "Würfeln");
+        createRollButton(i, ROLL_REFLEX_COLUMN, "reflex", character.getReflexSave(), "Würfeln");
+        createRollButton(i, ROLL_FORTITUDE_COLUMN, "fortitude", character.getFortitudeSave(), "Würfeln");
+    }
+}
+
+void MainWindow::createRollButton(int row, int column, const QString &diceType, int modifier, const QString &label)
+{
+    // Erstelle einen Button für den Würfelwurf
+    QPushButton *button = new QPushButton(label);
+    button->setProperty("row", row);
+    button->setProperty("column", column);
+    button->setProperty("diceType", diceType);
+    button->setProperty("modifier", modifier);
+    
+    // Verbinde den Button mit dem Slot
+    connect(button, &QPushButton::clicked, this, &MainWindow::onRollDiceButtonClicked);
+    
+    // Setze den Button in die Tabelle
+    ui->characterTableView->setIndexWidget(m_proxyModel->index(row, column), button);
+}
+
+void MainWindow::onRollDiceButtonClicked()
+{
+    // Hole den Sender-Button
+    QPushButton *button = qobject_cast<QPushButton*>(sender());
+    if (!button) return;
+    
+    // Hole die Eigenschaften des Buttons
+    int row = button->property("row").toInt();
+    int column = button->property("column").toInt();
+    QString diceType = button->property("diceType").toString();
+    
+    // Konvertiere den Proxy-Index in den Quellindex
+    QModelIndex proxyIndex = m_proxyModel->index(row, 0);
+    QModelIndex sourceIndex = m_proxyModel->mapToSource(proxyIndex);
+    int sourceRow = sourceIndex.row();
+    
+    // Führe den entsprechenden Würfelwurf durch
+    if (diceType == "d20") {
+        // Initiative würfeln
+        m_initiativeTracker.rollInitiativeForCharacter(sourceRow);
+    } else if (diceType == "will") {
+        // Willenskraft würfeln
+        m_initiativeTracker.rollWillSaveForCharacter(sourceRow);
+    } else if (diceType == "reflex") {
+        // Reflex würfeln
+        m_initiativeTracker.rollReflexSaveForCharacter(sourceRow);
+    } else if (diceType == "fortitude") {
+        // Konstitution würfeln
+        m_initiativeTracker.rollFortitudeSaveForCharacter(sourceRow);
+    }
+}
+
+void MainWindow::on_rollWillButton_clicked()
+{
+    // Würfle Willenskraft-Rettungswürfe für alle Charaktere
+    m_initiativeTracker.rollAllWillSaves();
+}
+
+void MainWindow::on_rollReflexButton_clicked()
+{
+    // Würfle Reflex-Rettungswürfe für alle Charaktere
+    m_initiativeTracker.rollAllReflexSaves();
+}
+
+void MainWindow::on_rollFortitudeButton_clicked()
+{
+    // Würfle Konstitution-Rettungswürfe für alle Charaktere
+    m_initiativeTracker.rollAllFortitudeSaves();
 } 

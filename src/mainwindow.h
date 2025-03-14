@@ -2,8 +2,10 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include <QTableWidgetItem>
-#include <QCloseEvent>
+#include <QStandardItemModel>
+#include <QSortFilterProxyModel>
+#include <QMessageBox>
+#include <QFileDialog>
 #include <QDesktopServices>
 #include <QUrl>
 #include <QPushButton>
@@ -14,31 +16,27 @@ namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
 
 /**
- * @brief Die MainWindow-Klasse stellt die Hauptbenutzeroberfläche der Anwendung dar.
+ * @brief Die MainWindow-Klasse repräsentiert das Hauptfenster der Anwendung.
  * 
- * Diese Klasse ist für die Darstellung der Benutzeroberfläche und die Interaktion
- * mit dem Benutzer verantwortlich. Sie verwaltet die UI-Elemente und verbindet sie
- * mit dem InitiativeTracker, der die eigentliche Logik enthält.
+ * Diese Klasse ist für die Benutzeroberfläche und die Interaktion mit dem Benutzer
+ * verantwortlich. Sie verbindet die Benutzeroberfläche mit der InitiativeTracker-Klasse.
  */
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
-
+    
 public:
     /**
-     * @brief Konstruktor für das Hauptfenster.
+     * @brief Konstruktor für das MainWindow.
      * 
-     * Initialisiert die UI und richtet die Verbindungen zwischen den UI-Elementen
-     * und den Slots ein. Lädt auch die gespeicherten Charakterdaten, falls vorhanden.
-     * 
-     * @param parent Das Elternobjekt für die Qt-Objekthierarchie
+     * @param parent Der Eltern-QWidget (für die Qt-Objekthierarchie)
      */
     MainWindow(QWidget *parent = nullptr);
     
     /**
-     * @brief Destruktor für das Hauptfenster.
+     * @brief Destruktor für das MainWindow.
      * 
-     * Gibt die von der UI verwendeten Ressourcen frei.
+     * Gibt alle Ressourcen frei, die vom MainWindow verwendet werden.
      */
     ~MainWindow();
 
@@ -57,48 +55,134 @@ private slots:
     /**
      * @brief Slot, der aufgerufen wird, wenn der "Hinzufügen"-Button geklickt wird.
      * 
-     * Liest die Eingabefelder aus und fügt einen neuen Charakter zum InitiativeTracker hinzu.
+     * Fügt einen neuen Charakter zur Liste hinzu, basierend auf den Eingabefeldern.
      */
     void on_addButton_clicked();
     
     /**
-     * @brief Slot, der aufgerufen wird, wenn der "Initiative würfeln"-Button geklickt wird.
+     * @brief Slot, der aufgerufen wird, wenn der "Entfernen"-Button geklickt wird.
      * 
-     * Würfelt die Initiative für alle Charaktere im InitiativeTracker.
-     */
-    void on_rollButton_clicked();
-    
-    /**
-     * @brief Slot, der aufgerufen wird, wenn der "Liste leeren"-Button geklickt wird.
-     * 
-     * Entfernt alle Charaktere aus dem InitiativeTracker nach Bestätigung durch den Benutzer.
-     */
-    void on_clearButton_clicked();
-    
-    /**
-     * @brief Slot, der aufgerufen wird, wenn der "Ausgewählten entfernen"-Button geklickt wird.
-     * 
-     * Entfernt den ausgewählten Charakter aus dem InitiativeTracker.
+     * Entfernt den ausgewählten Charakter aus der Liste.
      */
     void on_removeButton_clicked();
     
     /**
-     * @brief Aktualisiert die Charaktertabelle mit den aktuellen Daten aus dem InitiativeTracker.
+     * @brief Slot, der aufgerufen wird, wenn der "Alle löschen"-Button geklickt wird.
      * 
-     * Wird aufgerufen, wenn sich die Charakterliste ändert oder die Initiative gewürfelt wurde.
+     * Entfernt alle Charaktere aus der Liste.
      */
-    void updateCharacterTable();
+    void on_clearButton_clicked();
     
     /**
-     * @brief Öffnet die TaleSpire-URL mit dem angegebenen Modifikator.
+     * @brief Slot, der aufgerufen wird, wenn der "Initiative würfeln"-Button geklickt wird.
      * 
-     * @param modifier Der Initiative-Modifikator, der in die URL eingefügt wird
+     * Würfelt die Initiative für alle Charaktere und aktualisiert die Tabelle.
      */
-    void openTaleSpireUrl(int modifier);
-
+    void on_rollInitiativeButton_clicked();
+    
+    /**
+     * @brief Slot, der aufgerufen wird, wenn der "Speichern"-Button geklickt wird.
+     * 
+     * Speichert die Charakterliste in einer Datei.
+     */
+    void on_saveButton_clicked();
+    
+    /**
+     * @brief Slot, der aufgerufen wird, wenn der "Laden"-Button geklickt wird.
+     * 
+     * Lädt die Charakterliste aus einer Datei.
+     */
+    void on_loadButton_clicked();
+    
+    /**
+     * @brief Slot, der aufgerufen wird, wenn sich die Charakterliste ändert.
+     * 
+     * Aktualisiert die Tabelle mit den aktuellen Charakterdaten.
+     */
+    void onCharactersChanged();
+    
+    /**
+     * @brief Slot, der aufgerufen wird, wenn die Initiative gewürfelt wurde.
+     * 
+     * Aktualisiert die Tabelle mit den neuen Initiative-Werten und sortiert sie.
+     */
+    void onInitiativeRolled();
+    
+    /**
+     * @brief Slot, der aufgerufen wird, wenn ein TaleSpire-Würfel-Button geklickt wird.
+     * 
+     * Öffnet einen TaleSpire-Würfel-Link im Standard-Browser.
+     */
+    void onRollDiceButtonClicked();
+    
+    /**
+     * @brief Slot, der aufgerufen wird, wenn der "Willenskraft würfeln"-Button geklickt wird.
+     * 
+     * Würfelt Willenskraft-Rettungswürfe für alle Charaktere und aktualisiert die Tabelle.
+     */
+    void on_rollWillButton_clicked();
+    
+    /**
+     * @brief Slot, der aufgerufen wird, wenn der "Reflex würfeln"-Button geklickt wird.
+     * 
+     * Würfelt Reflex-Rettungswürfe für alle Charaktere und aktualisiert die Tabelle.
+     */
+    void on_rollReflexButton_clicked();
+    
+    /**
+     * @brief Slot, der aufgerufen wird, wenn der "Konstitution würfeln"-Button geklickt wird.
+     * 
+     * Würfelt Konstitution-Rettungswürfe für alle Charaktere und aktualisiert die Tabelle.
+     */
+    void on_rollFortitudeButton_clicked();
+    
+    /**
+     * @brief Slot, der aufgerufen wird, wenn Rettungswürfe gewürfelt wurden.
+     * 
+     * Aktualisiert die Tabelle mit den neuen Rettungswurf-Werten.
+     */
+    void onSavesRolled();
+    
 private:
-    Ui::MainWindow *ui;                   ///< Zeiger auf die UI-Elemente
-    InitiativeTracker m_initiativeTracker; ///< Der InitiativeTracker, der die Charaktere verwaltet
+    /**
+     * @brief Aktualisiert die Tabelle mit den aktuellen Charakterdaten.
+     * 
+     * Diese Methode wird aufgerufen, wenn sich die Charakterliste ändert oder
+     * wenn die Initiative gewürfelt wurde.
+     */
+    void updateTable();
+    
+    /**
+     * @brief Erstellt einen TaleSpire-Würfel-Button für eine Zelle in der Tabelle.
+     * 
+     * @param row Die Zeile in der Tabelle
+     * @param column Die Spalte in der Tabelle
+     * @param diceType Der Typ des Würfels (z.B. "d20")
+     * @param modifier Der Modifikator für den Würfelwurf
+     * @param label Die Beschriftung des Buttons
+     */
+    void createRollButton(int row, int column, const QString &diceType, int modifier, const QString &label);
+    
+    Ui::MainWindow *ui;                      ///< Die UI-Komponenten des Hauptfensters
+    InitiativeTracker m_initiativeTracker;   ///< Der Initiative-Tracker für die Charaktere
+    QStandardItemModel *m_model;             ///< Das Datenmodell für die Tabelle
+    QSortFilterProxyModel *m_proxyModel;     ///< Das Proxy-Modell für die Sortierung der Tabelle
+    
+    // Konstanten für die Tabellenspalten
+    enum Columns {
+        NAME_COLUMN = 0,
+        INITIATIVE_MOD_COLUMN,
+        INITIATIVE_ROLL_COLUMN,
+        TOTAL_INITIATIVE_COLUMN,
+        ROLL_INITIATIVE_COLUMN,
+        WILL_SAVE_COLUMN,
+        REFLEX_SAVE_COLUMN,
+        FORTITUDE_SAVE_COLUMN,
+        ROLL_WILL_COLUMN,
+        ROLL_REFLEX_COLUMN,
+        ROLL_FORTITUDE_COLUMN,
+        COLUMN_COUNT
+    };
     
     /**
      * @brief Lädt die gespeicherten Charakterdaten.
@@ -116,4 +200,5 @@ private:
      */
     void saveCharacters();
 };
+
 #endif // MAINWINDOW_H 

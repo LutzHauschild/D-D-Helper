@@ -47,6 +47,17 @@ public:
     Character(const QString &name, int initiativeModifier);
     
     /**
+     * @brief Erweiterter Konstruktor mit allen Attributen inklusive Rettungswürfen.
+     * 
+     * @param name Der Name des Charakters
+     * @param initiativeModifier Der Initiative-Modifikator des Charakters
+     * @param willSave Der Willenskraft-Rettungswurf-Modifikator
+     * @param reflexSave Der Reflex-Rettungswurf-Modifikator
+     * @param fortitudeSave Der Konstitution-Rettungswurf-Modifikator
+     */
+    Character(const QString &name, int initiativeModifier, int willSave, int reflexSave, int fortitudeSave);
+    
+    /**
      * @brief Gibt den Namen des Charakters zurück.
      * 
      * C++ Konzept: Getter-Methoden
@@ -111,6 +122,92 @@ public:
      */
     int getTotalInitiative() const;
     
+    // Neue Methoden für Rettungswürfe
+    
+    /**
+     * @brief Gibt den Willenskraft-Rettungswurf-Modifikator zurück.
+     * 
+     * @return Der Willenskraft-Rettungswurf-Modifikator als Integer
+     */
+    int getWillSave() const;
+    
+    /**
+     * @brief Setzt den Willenskraft-Rettungswurf-Modifikator.
+     * 
+     * @param modifier Der neue Willenskraft-Rettungswurf-Modifikator
+     */
+    void setWillSave(int modifier);
+    
+    /**
+     * @brief Gibt den Reflex-Rettungswurf-Modifikator zurück.
+     * 
+     * @return Der Reflex-Rettungswurf-Modifikator als Integer
+     */
+    int getReflexSave() const;
+    
+    /**
+     * @brief Setzt den Reflex-Rettungswurf-Modifikator.
+     * 
+     * @param modifier Der neue Reflex-Rettungswurf-Modifikator
+     */
+    void setReflexSave(int modifier);
+    
+    /**
+     * @brief Gibt den Konstitution-Rettungswurf-Modifikator zurück.
+     * 
+     * @return Der Konstitution-Rettungswurf-Modifikator als Integer
+     */
+    int getFortitudeSave() const;
+    
+    /**
+     * @brief Setzt den Konstitution-Rettungswurf-Modifikator.
+     * 
+     * @param modifier Der neue Konstitution-Rettungswurf-Modifikator
+     */
+    void setFortitudeSave(int modifier);
+    
+    /**
+     * @brief Würfelt einen Willenskraft-Rettungswurf (W20 + Modifikator).
+     * 
+     * @return Das Ergebnis des Willenskraft-Rettungswurfs
+     */
+    int rollWillSave();
+    
+    /**
+     * @brief Würfelt einen Reflex-Rettungswurf (W20 + Modifikator).
+     * 
+     * @return Das Ergebnis des Reflex-Rettungswurfs
+     */
+    int rollReflexSave();
+    
+    /**
+     * @brief Würfelt einen Konstitution-Rettungswurf (W20 + Modifikator).
+     * 
+     * @return Das Ergebnis des Konstitution-Rettungswurfs
+     */
+    int rollFortitudeSave();
+    
+    /**
+     * @brief Gibt den letzten gewürfelten Willenskraft-Rettungswurf zurück.
+     * 
+     * @return Der letzte gewürfelte Willenskraft-Rettungswurf
+     */
+    int getLastWillSaveRoll() const;
+    
+    /**
+     * @brief Gibt den letzten gewürfelten Reflex-Rettungswurf zurück.
+     * 
+     * @return Der letzte gewürfelte Reflex-Rettungswurf
+     */
+    int getLastReflexSaveRoll() const;
+    
+    /**
+     * @brief Gibt den letzten gewürfelten Konstitution-Rettungswurf zurück.
+     * 
+     * @return Der letzte gewürfelte Konstitution-Rettungswurf
+     */
+    int getLastFortitudeSaveRoll() const;
+    
 private:
     /**
      * C++ Konzept: Datenkapselung
@@ -121,6 +218,14 @@ private:
     QString m_name;                  ///< Der Name des Charakters
     int m_initiativeModifier;        ///< Der Initiative-Modifikator des Charakters
     int m_initiativeRoll;            ///< Der gewürfelte Initiative-Wert (1-20)
+    
+    // Neue Attribute für Rettungswürfe
+    int m_willSave;                  ///< Der Willenskraft-Rettungswurf-Modifikator
+    int m_reflexSave;                ///< Der Reflex-Rettungswurf-Modifikator
+    int m_fortitudeSave;             ///< Der Konstitution-Rettungswurf-Modifikator
+    int m_lastWillSaveRoll;          ///< Der letzte gewürfelte Willenskraft-Rettungswurf
+    int m_lastReflexSaveRoll;        ///< Der letzte gewürfelte Reflex-Rettungswurf
+    int m_lastFortitudeSaveRoll;     ///< Der letzte gewürfelte Konstitution-Rettungswurf
     
     /**
      * C++ Konzept: Statische Klassenvariablen
