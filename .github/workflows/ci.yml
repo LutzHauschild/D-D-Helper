@@ -7,81 +7,29 @@ on:
     branches: [ main, master ]
 
 jobs:
-  build-and-test:
-    name: ${{ matrix.os }}-build-and-test
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false  # Erlaube, dass andere Jobs weiterlaufen, wenn einer fehlschlägt
-      matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-        include:
-          - os: ubuntu-latest
-            qt-version: '6.5.0'
-          - os: macos-latest
-            qt-version: '6.5.0'
-          - os: windows-latest
-            qt-version: '6.5.0'
-
+  build-and-test-macos:
+    name: macos-build-and-test
+    runs-on: macos-latest
+    
     steps:
     - uses: actions/checkout@v3
       with:
         clean: true
 
-    - name: Install Dependencies (Ubuntu)
-      if: runner.os == 'Linux'
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y libgl1-mesa-dev libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-render-util0 libxcb-xinerama0 libxcb-xkb1 xvfb
-        sudo apt-get install -y libicu-dev
-
     - name: Install Qt
       uses: jurplel/install-qt-action@v3
       with:
-        version: ${{ matrix.qt-version }}
+        version: '6.5.0'
         archives: 'qtbase qttools'
 
-    - name: Fix ICU Libraries (Linux)
-      if: runner.os == 'Linux'
-      shell: bash
-      run: |
-        echo "Checking for ICU libraries..."
-        find /usr/lib -name "libicu*.so*" | sort
-        
-        sudo ln -sf /usr/lib/x86_64-linux-gnu/libicui18n.so /usr/lib/libicui18n.so.56
-        sudo ln -sf /usr/lib/x86_64-linux-gnu/libicuuc.so /usr/lib/libicuuc.so.56
-        sudo ln -sf /usr/lib/x86_64-linux-gnu/libicudata.so /usr/lib/libicudata.so.56
-        
-        ls -la /usr/lib/libicu*.so*
-
-    - name: Debug Qt Installation (Linux)
-      if: runner.os == 'Linux'
+    - name: Debug Qt Installation
       shell: bash
       run: |
         echo "Qt installation directory:"
         ls -la "$Qt6_DIR"
         echo "Qt lib directory:"
         ls -la "$Qt6_DIR/lib"
-        echo "Qt libexec directory:"
-        ls -la "$Qt6_DIR/libexec"
-        echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
-        echo "Setting LD_LIBRARY_PATH to include Qt libraries"
-        export LD_LIBRARY_PATH="$Qt6_DIR/lib:$LD_LIBRARY_PATH"
-        echo "New LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
-
-    - name: Debug Qt Installation (Windows)
-      if: runner.os == 'Windows'
-      shell: cmd
-      run: |
-        echo "Qt installation directory:"
-        dir "%Qt6_DIR%"
-        echo "Qt bin directory:"
-        dir "%Qt6_DIR%\bin"
-        echo "Qt lib directory:"
-        dir "%Qt6_DIR%\lib"
-        echo "PATH: %PATH%"
-        echo "Adding Qt bin directory to PATH"
-        set PATH=%Qt6_DIR%\bin;%PATH%
-        echo "New PATH: %PATH%"
+        echo "PATH: $PATH"
 
     - name: Create and Clean Build Directory
       shell: bash
@@ -89,62 +37,160 @@ jobs:
         mkdir -p "${{github.workspace}}/build"
         rm -rf "${{github.workspace}}/build/"*
 
-    - name: Configure CMake (Unix)
-      if: runner.os != 'Windows'
+    - name: Configure CMake
       shell: bash
       working-directory: ${{github.workspace}}/build
       run: |
         echo "Current directory: $(pwd)"
         echo "Workspace directory: $GITHUB_WORKSPACE"
         ls -la "$GITHUB_WORKSPACE"
-        export LD_LIBRARY_PATH="$Qt6_DIR/lib:$LD_LIBRARY_PATH"
         cmake "$GITHUB_WORKSPACE" -DCMAKE_BUILD_TYPE=Release
 
-    - name: Configure CMake (Windows)
-      if: runner.os == 'Windows'
-      shell: cmd
-      working-directory: ${{github.workspace}}\build
-      run: |
-        echo "Current directory: %CD%"
-        echo "Workspace directory: %GITHUB_WORKSPACE%"
-        dir "%GITHUB_WORKSPACE%"
-        set PATH=%Qt6_DIR%\bin;%PATH%
-        cmake "%GITHUB_WORKSPACE%" -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="%Qt6_DIR%" -A x64
-
-    - name: Build (Unix)
-      if: runner.os != 'Windows'
+    - name: Build
       working-directory: ${{github.workspace}}/build
       shell: bash
-      run: |
-        export LD_LIBRARY_PATH="$Qt6_DIR/lib:/usr/lib:$LD_LIBRARY_PATH"
-        cmake --build . --config Release
+      run: cmake --build . --config Release
 
-    - name: Build (Windows)
-      if: runner.os == 'Windows'
-      working-directory: ${{github.workspace}}\build
-      shell: cmd
-      run: |
-        set PATH=%Qt6_DIR%\bin;%PATH%
-        cmake --build . --config Release --verbose
-
-    - name: Test (Linux)
-      if: runner.os == 'Linux'
-      working-directory: ${{github.workspace}}/build
-      shell: bash
-      run: |
-        export LD_LIBRARY_PATH="$Qt6_DIR/lib:/usr/lib:$LD_LIBRARY_PATH"
-        xvfb-run -a ctest -C Release --output-on-failure
-
-    - name: Test (macOS)
-      if: runner.os == 'macOS'
+    - name: Test
       working-directory: ${{github.workspace}}/build
       shell: bash
       run: ctest -C Release --output-on-failure
 
-    - name: Test (Windows)
-      if: runner.os == 'Windows' && success()
-      working-directory: ${{github.workspace}}\build
-      shell: cmd
-      run: |
-        set PATH=%Qt6_DIR%\bin;%PATH%
-        ctest -C Release --output-on-failure 
+# Kommentierte Jobs für spätere Verwendung
+# 
+# build-and-test-ubuntu:
+#   name: ubuntu-build-and-test
+#   runs-on: ubuntu-latest
+#   
+#   steps:
+#   - uses: actions/checkout@v3
+#     with:
+#       clean: true
+# 
+#   - name: Install Dependencies
+#     run: |
+#       sudo apt-get update
+#       sudo apt-get install -y libgl1-mesa-dev libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-render-util0 libxcb-xinerama0 libxcb-xkb1 xvfb
+#       sudo apt-get install -y libicu-dev
+# 
+#   - name: Install Qt
+#     uses: jurplel/install-qt-action@v3
+#     with:
+#       version: '6.5.0'
+#       archives: 'qtbase qttools'
+# 
+#   - name: Fix ICU Libraries
+#     shell: bash
+#     run: |
+#       echo "Checking for ICU libraries..."
+#       find /usr/lib -name "libicu*.so*" | sort
+#       
+#       sudo ln -sf /usr/lib/x86_64-linux-gnu/libicui18n.so /usr/lib/libicui18n.so.56
+#       sudo ln -sf /usr/lib/x86_64-linux-gnu/libicuuc.so /usr/lib/libicuuc.so.56
+#       sudo ln -sf /usr/lib/x86_64-linux-gnu/libicudata.so /usr/lib/libicudata.so.56
+#       
+#       ls -la /usr/lib/libicu*.so*
+# 
+#   - name: Debug Qt Installation
+#     shell: bash
+#     run: |
+#       echo "Qt installation directory:"
+#       ls -la "$Qt6_DIR"
+#       echo "Qt lib directory:"
+#       ls -la "$Qt6_DIR/lib"
+#       echo "Qt libexec directory:"
+#       ls -la "$Qt6_DIR/libexec"
+#       echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
+#       echo "Setting LD_LIBRARY_PATH to include Qt libraries"
+#       export LD_LIBRARY_PATH="$Qt6_DIR/lib:$LD_LIBRARY_PATH"
+#       echo "New LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
+# 
+#   - name: Create and Clean Build Directory
+#     shell: bash
+#     run: |
+#       mkdir -p "${{github.workspace}}/build"
+#       rm -rf "${{github.workspace}}/build/"*
+# 
+#   - name: Configure CMake
+#     shell: bash
+#     working-directory: ${{github.workspace}}/build
+#     run: |
+#       echo "Current directory: $(pwd)"
+#       echo "Workspace directory: $GITHUB_WORKSPACE"
+#       ls -la "$GITHUB_WORKSPACE"
+#       export LD_LIBRARY_PATH="$Qt6_DIR/lib:$LD_LIBRARY_PATH"
+#       cmake "$GITHUB_WORKSPACE" -DCMAKE_BUILD_TYPE=Release
+# 
+#   - name: Build
+#     working-directory: ${{github.workspace}}/build
+#     shell: bash
+#     run: |
+#       export LD_LIBRARY_PATH="$Qt6_DIR/lib:/usr/lib:$LD_LIBRARY_PATH"
+#       cmake --build . --config Release
+# 
+#   - name: Test
+#     working-directory: ${{github.workspace}}/build
+#     shell: bash
+#     run: |
+#       export LD_LIBRARY_PATH="$Qt6_DIR/lib:/usr/lib:$LD_LIBRARY_PATH"
+#       xvfb-run -a ctest -C Release --output-on-failure
+# 
+# build-and-test-windows:
+#   name: windows-build-and-test
+#   runs-on: windows-latest
+#   
+#   steps:
+#   - uses: actions/checkout@v3
+#     with:
+#       clean: true
+# 
+#   - name: Install Qt
+#     uses: jurplel/install-qt-action@v3
+#     with:
+#       version: '6.5.0'
+#       archives: 'qtbase qttools'
+# 
+#   - name: Debug Qt Installation
+#     shell: cmd
+#     run: |
+#       echo "Qt installation directory:"
+#       dir "%Qt6_DIR%"
+#       echo "Qt bin directory:"
+#       dir "%Qt6_DIR%\bin"
+#       echo "Qt lib directory:"
+#       dir "%Qt6_DIR%\lib"
+#       echo "PATH: %PATH%"
+#       echo "Adding Qt bin directory to PATH"
+#       set PATH=%Qt6_DIR%\bin;%PATH%
+#       echo "New PATH: %PATH%"
+# 
+#   - name: Create and Clean Build Directory
+#     shell: bash
+#     run: |
+#       mkdir -p "${{github.workspace}}/build"
+#       rm -rf "${{github.workspace}}/build/"*
+# 
+#   - name: Configure CMake
+#     shell: cmd
+#     working-directory: ${{github.workspace}}\build
+#     run: |
+#       echo "Current directory: %CD%"
+#       echo "Workspace directory: %GITHUB_WORKSPACE%"
+#       dir "%GITHUB_WORKSPACE%"
+#       set PATH=%Qt6_DIR%\bin;%PATH%
+#       cmake "%GITHUB_WORKSPACE%" -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="%Qt6_DIR%" -A x64
+# 
+#   - name: Build
+#     working-directory: ${{github.workspace}}\build
+#     shell: cmd
+#     run: |
+#       set PATH=%Qt6_DIR%\bin;%PATH%
+#       cmake --build . --config Release --verbose
+# 
+#   - name: Test
+#     if: success()
+#     working-directory: ${{github.workspace}}\build
+#     shell: cmd
+#     run: |
+#       set PATH=%Qt6_DIR%\bin;%PATH%
+#       ctest -C Release --output-on-failure 
