@@ -34,8 +34,9 @@ jobs:
       uses: jurplel/install-qt-action@v3
       with:
         version: ${{ matrix.qt-version }}
-        modules: 'qtwidgets qttest'
-
+        modules: 'qtwidgets qtcore qtgui qttest'
+        archives: 'qtbase qttools'
+        
     - name: Create Build Environment
       run: cmake -E make_directory ${{github.workspace}}/build
 
