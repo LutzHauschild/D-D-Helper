@@ -776,21 +776,61 @@ void MainWindow::processWebSocketMessage(const QString &message)
         // Beispiel: Wenn die Nachricht einen "command"-Schlüssel hat
         if (jsonObj.contains("command")) {
             QString command = jsonObj["command"].toString();
+            QWebSocket *client = qobject_cast<QWebSocket *>(sender());
+            QJsonObject response;
             
             if (command == "rollInitiative") {
                 // Initiative für alle Charaktere würfeln
                 m_initiativeTracker.rollAllInitiatives();
                 
                 // Sende eine Antwort zurück
-                QWebSocket *client = qobject_cast<QWebSocket *>(sender());
                 if (client) {
-                    QJsonObject response;
                     response["status"] = "success";
                     response["message"] = "Initiative für alle Charaktere gewürfelt";
                     client->sendTextMessage(QJsonDocument(response).toJson());
                 }
             }
-            // Weitere Befehle können hier hinzugefügt werden
+            else if (command == "rollWillSave") {
+                // Willenskraft für alle Charaktere würfeln
+                m_initiativeTracker.rollAllWillSaves();
+                
+                // Sende eine Antwort zurück
+                if (client) {
+                    response["status"] = "success";
+                    response["message"] = "Willenskraft für alle Charaktere gewürfelt";
+                    client->sendTextMessage(QJsonDocument(response).toJson());
+                }
+            }
+            else if (command == "rollReflexSave") {
+                // Reflex für alle Charaktere würfeln
+                m_initiativeTracker.rollAllReflexSaves();
+                
+                // Sende eine Antwort zurück
+                if (client) {
+                    response["status"] = "success";
+                    response["message"] = "Reflex für alle Charaktere gewürfelt";
+                    client->sendTextMessage(QJsonDocument(response).toJson());
+                }
+            }
+            else if (command == "rollFortitudeSave") {
+                // Konstitution für alle Charaktere würfeln
+                m_initiativeTracker.rollAllFortitudeSaves();
+                
+                // Sende eine Antwort zurück
+                if (client) {
+                    response["status"] = "success";
+                    response["message"] = "Konstitution für alle Charaktere gewürfelt";
+                    client->sendTextMessage(QJsonDocument(response).toJson());
+                }
+            }
+            else {
+                // Unbekannter Befehl
+                if (client) {
+                    response["status"] = "error";
+                    response["message"] = "Unbekannter Befehl: " + command;
+                    client->sendTextMessage(QJsonDocument(response).toJson());
+                }
+            }
         }
     }
     

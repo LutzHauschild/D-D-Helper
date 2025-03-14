@@ -48,6 +48,8 @@
             border-radius: 4px;
             cursor: pointer;
             font-size: 14px;
+            margin-right: 5px;
+            margin-bottom: 5px;
         }
         button:hover {
             background-color: #0069d9;
@@ -86,6 +88,15 @@
         .error {
             background-color: #ffebee;
         }
+        .info {
+            background-color: #f5f5f5;
+        }
+        .command-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-bottom: 15px;
+        }
     </style>
 </head>
 <body>
@@ -103,7 +114,7 @@
         
         <div class="card">
             <h2>Befehle senden</h2>
-            <div style="margin-bottom: 10px;">
+            <div class="command-buttons">
                 <button class="command-button" data-command="rollInitiative" disabled>Initiative würfeln</button>
                 <button class="command-button" data-command="rollWillSave" disabled>Willenskraft würfeln</button>
                 <button class="command-button" data-command="rollReflexSave" disabled>Reflex würfeln</button>
@@ -186,7 +197,15 @@
                 };
                 
                 socket.onmessage = (event) => {
-                    logMessage('Empfangen: ' + event.data, 'received');
+                    try {
+                        // Versuche, die Nachricht als JSON zu parsen
+                        const data = JSON.parse(event.data);
+                        const formattedData = JSON.stringify(data, null, 2);
+                        logMessage('Empfangen: ' + formattedData, 'received');
+                    } catch (e) {
+                        // Wenn die Nachricht kein gültiges JSON ist, zeige sie als Text an
+                        logMessage('Empfangen: ' + event.data, 'received');
+                    }
                 };
             } catch (error) {
                 logMessage('Fehler beim Verbinden: ' + error.message, 'error');
@@ -206,7 +225,18 @@
             button.addEventListener('click', () => {
                 const command = button.getAttribute('data-command');
                 const message = JSON.stringify({ command: command });
+                
+                // Deaktiviere den Button kurzzeitig, um mehrfaches Klicken zu verhindern
+                button.disabled = true;
+                
                 sendMessage(message);
+                
+                // Aktiviere den Button nach einer kurzen Verzögerung wieder
+                setTimeout(() => {
+                    if (socket && socket.readyState === WebSocket.OPEN) {
+                        button.disabled = false;
+                    }
+                }, 500);
             });
         });
         
@@ -227,7 +257,16 @@
         function sendMessage(message) {
             if (socket && socket.readyState === WebSocket.OPEN) {
                 socket.send(message);
-                logMessage('Gesendet: ' + message, 'sent');
+                
+                try {
+                    // Versuche, die Nachricht als JSON zu parsen für eine schönere Anzeige
+                    const data = JSON.parse(message);
+                    const formattedData = JSON.stringify(data, null, 2);
+                    logMessage('Gesendet: ' + formattedData, 'sent');
+                } catch (e) {
+                    // Wenn die Nachricht kein gültiges JSON ist, zeige sie als Text an
+                    logMessage('Gesendet: ' + message, 'sent');
+                }
             } else {
                 logMessage('Fehler: Nicht verbunden', 'error');
             }
