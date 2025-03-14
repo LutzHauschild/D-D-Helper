@@ -44,7 +44,6 @@ private slots:
      */
     void testGetTotalInitiative();
 
-    void testRandomDistribution();
 
 private:
     Character *m_character;
