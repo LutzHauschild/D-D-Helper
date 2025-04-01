@@ -228,7 +228,31 @@
         </property>
        </widget>
       </item>
+      <item>
+       <widget class="QPushButton" name="toggleLogButton">
+        <property name="text">
+         <string>Log anzeigen/ausblenden</string>
+        </property>
+       </widget>
+      </item>
      </layout>
+    </item>
+    <item>
+     <widget class="QTableView" name="diceRollTableView">
+      <property name="minimumHeight">
+       <number>100</number>
+      </property>
+      <property name="maximumHeight">
+       <number>150</number>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QTextEdit" name="messageDisplay">
+      <property name="readOnly">
+       <bool>true</bool>
+      </property>
+     </widget>
     </item>
    </layout>
   </widget>

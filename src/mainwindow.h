@@ -12,6 +12,9 @@
 #include <QWebSocketServer>
 #include <QWebSocket>
 #include <QTextEdit>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonArray>
 #include "initiativetracker.h"
 
 QT_BEGIN_NAMESPACE
@@ -98,6 +101,13 @@ private slots:
     void on_loadButton_clicked();
     
     /**
+     * @brief Slot, der aufgerufen wird, wenn der "Log anzeigen/ausblenden"-Button geklickt wird.
+     * 
+     * Zeigt oder versteckt das Logfenster.
+     */
+    void on_toggleLogButton_clicked();
+    
+    /**
      * @brief Slot, der aufgerufen wird, wenn sich die Charakterliste ändert.
      * 
      * Aktualisiert die Tabelle mit den aktuellen Charakterdaten.
@@ -182,6 +192,31 @@ private:
     void updateTable();
     
     /**
+     * @brief Aktualisiert die Würfelwurf-Tabelle mit neuen Daten.
+     * 
+     * @param playerName Name des Spielers
+     * @param diceRoll Beschreibung des Würfelwurfs
+     * @param result Ergebnis des Würfelwurfs
+     */
+    void updateDiceRollTable(const QString &playerName, const QString &diceRoll, int result);
+    
+    /**
+     * @brief Berechnet die Beschreibung des Würfelwurfs aus den Operanden.
+     * 
+     * @param operands JSON-Array der Operanden
+     * @return Beschreibung des Würfelwurfs (z.B. "2d6+1d8+14")
+     */
+    QString calculateDiceRollDescription(const QJsonArray &operands);
+    
+    /**
+     * @brief Berechnet das Ergebnis des Würfelwurfs aus den Operanden.
+     * 
+     * @param operands JSON-Array der Operanden
+     * @return Gesamtergebnis des Würfelwurfs
+     */
+    int calculateDiceRollResult(const QJsonArray &operands);
+    
+    /**
      * @brief Erstellt einen TaleSpire-Würfel-Button für eine Zelle in der Tabelle.
      * 
      * @param row Die Zeile in der Tabelle
@@ -196,6 +231,7 @@ private:
     InitiativeTracker m_initiativeTracker;   ///< Der Initiative-Tracker für die Charaktere
     QStandardItemModel *m_model;             ///< Das Datenmodell für die Tabelle
     QSortFilterProxyModel *m_proxyModel;     ///< Das Proxy-Modell für die Sortierung der Tabelle
+    QStandardItemModel *m_diceRollModel;     ///< Das Datenmodell für die Würfelwurf-Tabelle
     
     // Spaltenindizes für die Tabelle
     static const int NAME_COLUMN = 0;

@@ -160,7 +160,7 @@
                 connectionStatus.className = 'connection-status connecting';
                 connectionStatus.textContent = 'Verbindung wird hergestellt...';
                 
-                socket = new WebSocket('ws://localhost:8080');
+                socket = new WebSocket('ws://localhost:8088');
                 
                 socket.onopen = () => {
                     connectionStatus.className = 'connection-status connected';

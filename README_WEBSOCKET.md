@@ -6,7 +6,7 @@ Diese Dokumentation beschreibt, wie man die WebSocket-Schnittstelle des D&D Init
 
 Der D&D Initiative Tracker bietet eine WebSocket-Schnittstelle, über die externe Anwendungen mit dem Tracker kommunizieren können. Die Kommunikation erfolgt über JSON-formatierte Nachrichten.
 
-Der WebSocket-Server läuft auf `ws://localhost:8080`, wenn die Anwendung gestartet ist.
+Der WebSocket-Server läuft auf `ws://localhost:8088`, wenn die Anwendung gestartet ist.
 
 ## Beispiel-Client
 
@@ -82,7 +82,7 @@ Um die WebSocket-Schnittstelle in eigene Anwendungen zu integrieren, kann der fo
 
 ```javascript
 // WebSocket-Verbindung herstellen
-const socket = new WebSocket('ws://localhost:8080');
+const socket = new WebSocket('ws://localhost:8088');
 
 // Ereignishandler für die Verbindung
 socket.onopen = () => {
@@ -126,5 +126,5 @@ Die WebSocket-Schnittstelle kann leicht um weitere Befehle erweitert werden. Daz
 ## Fehlerbehebung
 
 - Stelle sicher, dass der D&D Initiative Tracker läuft, bevor du versuchst, eine Verbindung herzustellen.
-- Überprüfe, ob der Port 8080 auf deinem System verfügbar ist.
+- Überprüfe, ob der Port 8088 auf deinem System verfügbar ist.
 - Wenn du Probleme mit der Verbindung hast, überprüfe die Konsolenausgabe des Browsers (F12) auf Fehlermeldungen. 

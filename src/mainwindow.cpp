@@ -74,6 +74,20 @@ MainWindow::MainWindow(QWidget *parent)
     m_messageDisplay = new QTextEdit(this);
     m_messageDisplay->setReadOnly(true);
     m_messageDisplay->setPlaceholderText("Hier werden empfangene Nachrichten angezeigt...");
+    m_messageDisplay->setVisible(true);  // Standardmäßig sichtbar
+    
+    // Erstelle das Datenmodell für die Würfelwurf-Tabelle
+    m_diceRollModel = new QStandardItemModel(this);
+    QStringList diceRollHeaders;
+    diceRollHeaders << "Zeit" << "Spieler" << "Wurf" << "Ergebnis";
+    m_diceRollModel->setHorizontalHeaderLabels(diceRollHeaders);
+    
+    // Konfiguriere die Würfelwurf-Tabelle
+    ui->diceRollTableView->setModel(m_diceRollModel);
+    ui->diceRollTableView->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    ui->diceRollTableView->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+    ui->diceRollTableView->horizontalHeader()->setStretchLastSection(true);
+    ui->diceRollTableView->setAlternatingRowColors(true);
     
     // Füge das TextEdit zum Layout hinzu
     QVBoxLayout* mainLayout = qobject_cast<QVBoxLayout*>(ui->centralwidget->layout());
@@ -315,16 +329,32 @@ void MainWindow::on_saveButton_clicked()
  */
 void MainWindow::on_loadButton_clicked()
 {
-    // Öffne einen Datei-Dialog zum Laden
-    QString filename = QFileDialog::getOpenFileName(
-        this, "Charaktere laden", "", "JSON-Dateien (*.json);;Alle Dateien (*)");
-    
-    if (!filename.isEmpty()) {
-        if (m_initiativeTracker.loadFromFile(filename)) {
-            QMessageBox::information(this, "Erfolg", "Charaktere erfolgreich geladen.");
+    QString fileName = QFileDialog::getOpenFileName(this,
+        tr("Charaktere laden"), "",
+        tr("JSON-Dateien (*.json);;Alle Dateien (*)"));
+        
+    if (!fileName.isEmpty()) {
+        if (m_initiativeTracker.loadFromFile(fileName)) {
+            updateTable();
+            qDebug() << "Charaktere erfolgreich geladen aus:" << fileName;
         } else {
-            QMessageBox::warning(this, "Fehler", "Fehler beim Laden der Charaktere.");
+            QMessageBox::warning(this, tr("Fehler"),
+                tr("Fehler beim Laden der Charaktere."));
         }
+    }
+}
+
+/**
+ * @brief Slot, der aufgerufen wird, wenn der "Log anzeigen/ausblenden"-Button geklickt wird.
+ * 
+ * Zeigt oder versteckt das Logfenster.
+ */
+void MainWindow::on_toggleLogButton_clicked()
+{
+    if (m_messageDisplay) {
+        m_messageDisplay->setVisible(!m_messageDisplay->isVisible());
+        ui->toggleLogButton->setText(m_messageDisplay->isVisible() ? 
+            tr("Log ausblenden") : tr("Log anzeigen"));
     }
 }
 
@@ -577,7 +607,7 @@ void MainWindow::createRollButton(int row, int column, const QString &diceType, 
     qDebug() << "createRollButton: Button verbunden";
     
     // Setze den Button in die Tabelle
-    QModelIndex index = m_proxyModel->index(row, column);
+    QModelIndex index = m_proxyModel->index(row, 0);
     qDebug() << "createRollButton: Index erstellt - gültig:" << index.isValid() << " Zeile:" << index.row() << " Spalte:" << index.column();
     
     if (index.isValid()) {
@@ -709,16 +739,16 @@ void MainWindow::setupWebSocketServer()
     m_webSocketServer = new QWebSocketServer(QStringLiteral("D&D Initiative Tracker Server"),
                                             QWebSocketServer::NonSecureMode, this);
     
-    // Versuche, den Server auf Port 8080 zu starten
-    if (m_webSocketServer->listen(QHostAddress::LocalHost, 8080)) {
-        qDebug() << "WebSocket-Server gestartet auf Port 8080";
+    // Versuche, den Server auf Port 8088 zu starten
+    if (m_webSocketServer->listen(QHostAddress::LocalHost, 8088)) {
+        qDebug() << "WebSocket-Server gestartet auf Port 8088";
         
         // Verbinde das Signal für neue Verbindungen
         connect(m_webSocketServer, &QWebSocketServer::newConnection,
                 this, &MainWindow::onNewWebSocketConnection);
         
         // Zeige eine Meldung im TextEdit an
-        m_messageDisplay->append("WebSocket-Server gestartet auf ws://localhost:8080");
+        m_messageDisplay->append("WebSocket-Server gestartet auf ws://localhost:8088");
         m_messageDisplay->append("Warte auf Verbindungen...");
     } else {
         qDebug() << "Fehler beim Starten des WebSocket-Servers:" << m_webSocketServer->errorString();
@@ -772,8 +802,27 @@ void MainWindow::processWebSocketMessage(const QString &message)
     if (!jsonDoc.isNull() && jsonDoc.isObject()) {
         QJsonObject jsonObj = jsonDoc.object();
         
-        // Hier kannst du die JSON-Nachricht verarbeiten
-        // Beispiel: Wenn die Nachricht einen "command"-Schlüssel hat
+        // Verarbeite Würfelwurf-Nachrichten
+        if (jsonObj["type"].toString() == "roll_result") {
+            QJsonObject payload = jsonObj["payload"].toObject();
+            QJsonObject processedData = jsonObj["processedData"].toObject();
+            
+            QString playerName = processedData["playerName"].toString();
+            QJsonArray operants = processedData["operants"].toArray();
+            
+            if (!operants.isEmpty()) {
+                QJsonObject firstOperant = operants[0].toObject();
+                QJsonObject result = firstOperant["result"].toObject();
+                QJsonArray operands = result["operands"].toArray();
+                
+                QString diceRoll = calculateDiceRollDescription(operands);
+                int rollResult = calculateDiceRollResult(operands);
+                
+                updateDiceRollTable(playerName, diceRoll, rollResult);
+            }
+        }
+        
+        // Verarbeite andere Nachrichtentypen...
         if (jsonObj.contains("command")) {
             QString command = jsonObj["command"].toString();
             QWebSocket *client = qobject_cast<QWebSocket *>(sender());
@@ -880,4 +929,92 @@ void MainWindow::socketDisconnected()
     }
     
     qDebug() << "socketDisconnected: Ende";
+}
+
+void MainWindow::updateDiceRollTable(const QString &playerName, const QString &diceRoll, int result)
+{
+    // Erstelle eine neue Zeile
+    QList<QStandardItem*> row;
+    
+    // Zeitstempel
+    row.append(new QStandardItem(QTime::currentTime().toString("hh:mm:ss")));
+    
+    // Spielername
+    row.append(new QStandardItem(playerName));
+    
+    // Würfelwurf-Beschreibung
+    row.append(new QStandardItem(diceRoll));
+    
+    // Ergebnis
+    row.append(new QStandardItem(QString::number(result)));
+    
+    // Füge die Zeile am Anfang der Tabelle ein
+    m_diceRollModel->insertRow(0, row);
+}
+
+QString MainWindow::calculateDiceRollDescription(const QJsonArray &operands)
+{
+    QString description;
+    bool first = true;
+    
+    for (const QJsonValue &operand : operands) {
+        QJsonObject obj = operand.toObject();
+        
+        if (!first) {
+            description += obj["operator"].toString();
+        }
+        
+        if (obj.contains("kind")) {
+            // Würfelwurf
+            QString kind = obj["kind"].toString();
+            QJsonArray results = obj["results"].toArray();
+            description += QString("%1%2").arg(results.size()).arg(kind);
+        } else if (obj.contains("value")) {
+            // Fester Wert
+            description += QString::number(obj["value"].toInt());
+        }
+        
+        first = false;
+    }
+    
+    return description;
+}
+
+int MainWindow::calculateDiceRollResult(const QJsonArray &operands)
+{
+    int result = 0;
+    QString currentOperator = "+";
+    
+    for (const QJsonValue &operand : operands) {
+        QJsonObject obj = operand.toObject();
+        
+        if (obj.contains("operator")) {
+            currentOperator = obj["operator"].toString();
+        }
+        else if (obj.contains("kind")) {
+            // Würfelwurf
+            QJsonArray results = obj["results"].toArray();
+            int sum = 0;
+            for (const QJsonValue &value : results) {
+                sum += value.toInt();
+            }
+            
+            if (currentOperator == "+") {
+                result += sum;
+            } else if (currentOperator == "-") {
+                result -= sum;
+            }
+        }
+        else if (obj.contains("value")) {
+            // Fester Wert
+            int value = obj["value"].toInt();
+            if (currentOperator == "+") {
+                result += value;
+            } else if (currentOperator == "-") {
+                result -= value;
+            }
+        }
+    }
+    
+    return result;
 } 
