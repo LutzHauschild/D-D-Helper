@@ -71,7 +71,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(&m_initiativeTracker, &InitiativeTracker::savesRolled, this, &MainWindow::onSavesRolled);
     
     // Erstelle das TextEdit für die empfangenen Nachrichten
-    m_messageDisplay = new QTextEdit(this);
+    m_messageDisplay = ui->messageDisplay;
     m_messageDisplay->setReadOnly(true);
     m_messageDisplay->setPlaceholderText("Hier werden empfangene Nachrichten angezeigt...");
     m_messageDisplay->setVisible(true);  // Standardmäßig sichtbar
@@ -85,20 +85,15 @@ MainWindow::MainWindow(QWidget *parent)
     // Konfiguriere die Würfelwurf-Tabelle
     ui->diceRollTableView->setModel(m_diceRollModel);
     ui->diceRollTableView->setEditTriggers(QAbstractItemView::NoEditTriggers);
-    ui->diceRollTableView->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+    
+    // Spaltenbreiten anpassen
+    ui->diceRollTableView->setColumnWidth(0, 80);  // Zeit
+    ui->diceRollTableView->setColumnWidth(1, 100); // Spieler
+    ui->diceRollTableView->setColumnWidth(2, 400); // Wurf
+    ui->diceRollTableView->setColumnWidth(3, 80);  // Ergebnis
+    
     ui->diceRollTableView->horizontalHeader()->setStretchLastSection(true);
     ui->diceRollTableView->setAlternatingRowColors(true);
-    
-    // Füge das TextEdit zum Layout hinzu
-    QVBoxLayout* mainLayout = qobject_cast<QVBoxLayout*>(ui->centralwidget->layout());
-    if (mainLayout) {
-        mainLayout->addWidget(m_messageDisplay);
-    } else {
-        // Fallback, falls das Layout nicht gefunden wird
-        QVBoxLayout* newLayout = new QVBoxLayout();
-        newLayout->addWidget(m_messageDisplay);
-        ui->centralwidget->setLayout(newLayout);
-    }
     
     // Initialisiere den WebSocket-Server
     setupWebSocketServer();
@@ -955,13 +950,13 @@ void MainWindow::updateDiceRollTable(const QString &playerName, const QString &d
 QString MainWindow::calculateDiceRollDescription(const QJsonArray &operands)
 {
     QString description;
-    bool first = true;
     
-    for (const QJsonValue &operand : operands) {
-        QJsonObject obj = operand.toObject();
+    for (int i = 0; i < operands.size(); ++i) {
+        QJsonObject obj = operands[i].toObject();
         
-        if (!first) {
-            description += obj["operator"].toString();
+        // Wenn es nicht das erste Element ist, füge ein "+" hinzu
+        if (i > 0) {
+            description += " + ";
         }
         
         if (obj.contains("kind")) {
@@ -972,9 +967,11 @@ QString MainWindow::calculateDiceRollDescription(const QJsonArray &operands)
         } else if (obj.contains("value")) {
             // Fester Wert
             description += QString::number(obj["value"].toInt());
+        } else if (obj.contains("operands")) {
+            // Verschachtelte Operanden
+            QJsonArray nestedOperands = obj["operands"].toArray();
+            description += calculateDiceRollDescription(nestedOperands);
         }
-        
-        first = false;
     }
     
     return description;
